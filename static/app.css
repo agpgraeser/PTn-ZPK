@@ -10,6 +10,21 @@
    (gleiche Entscheidung wie in RegelkreisSimulationen). */
 :root { color-scheme: light; }
 
+/* ── Panelbreite ───────────────────────────────────────────────────────── */
+
+/* Fest 420 px wie in der Vorgaenger-App (App.tsx: '420px 1fr'), nicht ein
+   Drittel der Fensterbreite. Das Design-System gibt nur 300 px Mindestbreite
+   vor – damit ragten die Felder DY und DU aus der Karte heraus und die
+   zentrierte Ueberschrift wirkte nach rechts verschoben.
+   Die Raster darunter sind auf diese Breite ausgelegt:
+   Signalwerte ~342 px, Kennwerte ~383 px, verfuegbar sind 420 − 28 = 392 px. */
+.agp-workspace { grid-template-columns: 420px 1fr; }
+
+/* Auf schmalen Fenstern untereinander (wie im Design-System vorgesehen) */
+@media (max-width: 860px) {
+  .agp-workspace { grid-template-columns: 1fr; }
+}
+
 /* ── Kompakte Eingaberaster ────────────────────────────────────────────── */
 
 /* Signalwerte: Label | Feld | Label | Feld | Label | Feld  (3 Paare je Zeile) */
