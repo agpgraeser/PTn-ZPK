@@ -23,7 +23,7 @@
     <div class="agp-brand__word">AGP<b>·Control</b></div>
   </div>
   <div class="agp-header__sep"></div>
-  <div class="agp-header__title">PTn-Parameter nach der ZPK-Methode</div>
+  <div class="agp-header__title">PTn-Parameter Tool</div>
   <button class="agp-btn agp-btn--ghost agp-btn--sm" onclick="allesZuruecksetzen()"
           title="Alle Eingaben und geladene Messdaten zurücksetzen">↺ Zurücksetzen</button>
   <div class="agp-header__spacer"></div>
@@ -37,111 +37,82 @@
   <!-- ── Parameter-Panel ── -->
   <aside class="agp-panel">
 
+    <!-- Signalwerte: 3 Zeilen, je Label+Feld nebeneinander -->
     <div class="agp-card">
-      <div class="agp-card__head"><h3 class="agp-card__title is-brand">Signalwerte</h3></div>
-      <div class="agp-grid agp-grid--3">
-        <div class="agp-field">
-          <label class="agp-label" title="Ausgangsgröße vor dem Sprung">YA</label>
-          <input class="agp-input" type="number" id="YA" value="0" step="any" />
-        </div>
-        <div class="agp-field">
-          <label class="agp-label" title="Ausgangsgröße im Beharrungszustand">YE</label>
-          <input class="agp-input" type="number" id="YE" value="1" step="any" />
-        </div>
-        <div class="agp-field">
-          <label class="agp-label" title="Änderung der Ausgangsgröße: YE − YA">DY</label>
-          <input class="agp-input agp-input--readonly" id="DY" readonly />
-        </div>
-        <div class="agp-field">
-          <label class="agp-label" title="Stellgröße vor dem Sprung">UA</label>
-          <input class="agp-input" type="number" id="UA" value="0" step="any" />
-        </div>
-        <div class="agp-field">
-          <label class="agp-label" title="Stellgröße nach dem Sprung">UE</label>
-          <input class="agp-input" type="number" id="UE" value="1" step="any" />
-        </div>
-        <div class="agp-field">
-          <label class="agp-label" title="Sprunghöhe der Stellgröße: UE − UA">DU</label>
-          <input class="agp-input agp-input--readonly" id="DU" readonly />
-        </div>
-      </div>
-      <div class="agp-field" style="margin-top:8px">
-        <label class="agp-label" title="Zeitpunkt des Stellgrößensprungs">t₀</label>
-        <input class="agp-input" type="number" id="t0" value="0" step="any" />
+      <div class="row6">
+        <div class="rasterTitel">PTn-Parameter nach der ZPK-Methode</div>
+
+        <label for="YA" title="Ausgangsgröße vor dem Sprung">YA</label>
+        <input class="agp-input" type="number" id="YA" value="0" step="0.01" />
+        <label for="YE" title="Ausgangsgröße im Beharrungszustand">YE</label>
+        <input class="agp-input" type="number" id="YE" value="1" step="0.01" />
+        <label for="DY" title="Änderung der Ausgangsgröße: YE − YA">DY</label>
+        <input class="agp-input" id="DY" readonly />
+
+        <label for="UA" title="Stellgröße vor dem Sprung">UA</label>
+        <input class="agp-input" type="number" id="UA" value="0" step="0.01" />
+        <label for="UE" title="Stellgröße nach dem Sprung">UE</label>
+        <input class="agp-input" type="number" id="UE" value="1" step="0.01" />
+        <label for="DU" title="Sprunghöhe der Stellgröße: UE − UA">DU</label>
+        <input class="agp-input" id="DU" readonly />
+
+        <label for="t0" title="Zeitpunkt des Stellgrößensprungs">t₀</label>
+        <input class="agp-input" type="number" id="t0" value="0" step="0.1" />
+        <span></span><span></span><span></span><span></span>
       </div>
     </div>
 
+    <!-- ZPK-Zeiten: 3 Zeilen, je Amplitude und zugehörige Zeit -->
     <div class="agp-card">
       <div class="agp-card__head">
         <h3 class="agp-card__title is-brand">Eingaben Zeit-Prozent-Kennwert-Methode</h3>
       </div>
-      <div class="agp-hint">Zeiten, zu denen die Sprungantwort 10 %, 50 % und 90 % erreicht.</div>
-      <div class="agp-grid agp-grid--2">
-        <div class="agp-field">
-          <label class="agp-label">Y10</label>
-          <input class="agp-input agp-input--readonly" id="Y10" readonly />
-        </div>
-        <div class="agp-field">
-          <label class="agp-label">t10</label>
-          <input class="agp-input" type="number" id="t10" step="any" />
-        </div>
-        <div class="agp-field">
-          <label class="agp-label">Y50</label>
-          <input class="agp-input agp-input--readonly" id="Y50" readonly />
-        </div>
-        <div class="agp-field">
-          <label class="agp-label">t50</label>
-          <input class="agp-input" type="number" id="t50" step="any" />
-        </div>
-        <div class="agp-field">
-          <label class="agp-label">Y90</label>
-          <input class="agp-input agp-input--readonly" id="Y90" readonly />
-        </div>
-        <div class="agp-field">
-          <label class="agp-label">t90</label>
-          <input class="agp-input" type="number" id="t90" step="any" />
-        </div>
+      <div class="row4">
+        <label for="Y10">Y10</label><input class="agp-input" id="Y10" readonly />
+        <label for="t10">t10</label><input class="agp-input" type="number" id="t10" step="0.01" />
+        <label for="Y50">Y50</label><input class="agp-input" id="Y50" readonly />
+        <label for="t50">t50</label><input class="agp-input" type="number" id="t50" step="0.01" />
+        <label for="Y90">Y90</label><input class="agp-input" id="Y90" readonly />
+        <label for="t90">t90</label><input class="agp-input" type="number" id="t90" step="0.01" />
       </div>
       <div class="agp-msg agp-msg--warn" id="zeitMsg" hidden>
-        t₀ ≤ t10 ≤ t50 ≤ t90 muss gelten.
+        Es muss t₀ ≤ t10 ≤ t50 ≤ t90 gelten.
+      </div>
+    </div>
+
+    <!-- Kennwerte: kS in der Titelzeile, darunter je Modell eine Zeile -->
+    <div class="agp-card">
+      <div class="kS-zeile">
+        <h3 class="agp-card__title is-brand" style="margin:0">Berechnete Kennwerte</h3>
+        <label for="kS" title="Streckenverstärkung: DY / DU">kS</label>
+        <input class="agp-input" id="kS" readonly />
+      </div>
+      <div class="rowPTn" style="margin-top:8px">
+        <input type="checkbox" id="showM1" checked title="Kurve n opt−1 anzeigen" />
+        <label class="mk--m1" for="showM1">n opt−1</label><input class="agp-input" id="nM1" readonly />
+        <label>T opt−1</label><input class="agp-input" id="TM1" readonly />
+        <label>Var opt−1</label><input class="agp-input" id="VarM1" readonly />
+
+        <input type="checkbox" id="showOpt" checked title="Kurve n opt anzeigen" />
+        <label class="mk--opt" for="showOpt">n opt</label><input class="agp-input" id="nOpt" readonly />
+        <label>T opt</label><input class="agp-input" id="TOpt" readonly />
+        <label>Var opt</label><input class="agp-input" id="VarOpt" readonly />
+
+        <input type="checkbox" id="showP1" checked title="Kurve n opt+1 anzeigen" />
+        <label class="mk--p1" for="showP1">n opt+1</label><input class="agp-input" id="nP1" readonly />
+        <label>T opt+1</label><input class="agp-input" id="TP1" readonly />
+        <label>Var opt+1</label><input class="agp-input" id="VarP1" readonly />
       </div>
     </div>
 
     <div class="agp-card">
-      <div class="agp-card__head"><h3 class="agp-card__title is-brand">Berechnete Kennwerte</h3></div>
-      <div class="agp-field">
-        <label class="agp-label" title="Streckenverstärkung: DY / DU">kS</label>
-        <input class="agp-input agp-input--readonly" id="kS" readonly />
-      </div>
-      <table class="kennwerte" id="kennwerteTab">
-        <thead>
-          <tr><th>Modell</th><th>n</th><th>T</th><th>Var</th></tr>
-        </thead>
-        <tbody>
-          <tr data-row="m1">  <td class="mk mk--m1">n opt−1</td><td class="v n"></td><td class="v T"></td><td class="v Var"></td></tr>
-          <tr data-row="opt"> <td class="mk mk--opt">n opt</td>  <td class="v n"></td><td class="v T"></td><td class="v Var"></td></tr>
-          <tr data-row="p1">  <td class="mk mk--p1">n opt+1</td> <td class="v n"></td><td class="v T"></td><td class="v Var"></td></tr>
-        </tbody>
-      </table>
-      <div class="agp-hint">Var = Streuung der drei Einzelschätzungen; klein = die drei Zeitwerte passen gut zu dieser Ordnung.</div>
-    </div>
-
-    <div class="agp-card">
-      <div class="agp-card__head"><h3 class="agp-card__title">Modellkurven</h3></div>
-      <label class="agp-check"><input type="checkbox" id="showM1" checked /> <span>n opt−1</span></label>
-      <label class="agp-check"><input type="checkbox" id="showOpt" checked /> <span>n opt</span></label>
-      <label class="agp-check"><input type="checkbox" id="showP1" checked /> <span>n opt+1</span></label>
-    </div>
-
-    <div class="agp-card">
-      <div class="agp-card__head"><h3 class="agp-card__title">Darstellung (unteres Diagramm)</h3></div>
+      <div class="agp-card__head"><h3 class="agp-card__title">Darstellung</h3></div>
       <div class="agp-segmented" id="segDarstellung" role="group" aria-label="Darstellung">
         <button type="button" data-value="1" aria-pressed="true">Stellgröße</button>
         <button type="button" data-value="2" aria-pressed="false">Abweichung</button>
         <button type="button" data-value="3" aria-pressed="false">Δy²</button>
         <button type="button" data-value="4" aria-pressed="false">Σ Δy²·Δt</button>
       </div>
-      <div class="agp-hint" id="darstellungHinweis">Ohne Messdaten wird nur die Modellkurve gezeichnet.</div>
     </div>
 
     <div class="agp-card">
@@ -177,6 +148,7 @@ const S = {
 const $ = (id) => document.getElementById(id);
 const zahl = (id) => { const v = parseFloat($(id).value); return isFinite(v) ? v : null; };
 const fmt = (v, n = 4) => (v === null || v === undefined || !isFinite(v)) ? '' : Number(v).toFixed(n);
+const fmtNA = (v, n = 3) => (v === null || v === undefined) ? 'n.a.' : Number(v).toFixed(n);
 
 // ══ Abgeleitete Eingabegrößen ═════════════════════════════════════════════
 function signalwerte() {
@@ -189,14 +161,14 @@ function signalwerte() {
 
 function signalwerteAnzeigen() {
   const { YA, DY, DU, kS } = signalwerte();
-  $('DY').value = fmt(DY);
-  $('DU').value = fmt(DU);
-  $('kS').value = fmt(kS);
-  // Y10/Y50/Y90 sind die Amplituden, zu denen t10/t50/t90 gesucht werden
+  $('DY').value = fmt(DY, 2);
+  $('DU').value = fmt(DU, 2);
+  $('kS').value = fmt(kS, 4);
+  // Y10/Y50/Y90 sind die Amplituden, zu denen t10/t50/t90 abgelesen werden
   const anteil = (p) => (YA !== null && DY !== null) ? YA + p * DY : null;
-  $('Y10').value = fmt(anteil(0.10));
-  $('Y50').value = fmt(anteil(0.50));
-  $('Y90').value = fmt(anteil(0.90));
+  $('Y10').value = fmt(anteil(0.10), 2);
+  $('Y50').value = fmt(anteil(0.50), 2);
+  $('Y90').value = fmt(anteil(0.90), 2);
 }
 
 // ══ Server ════════════════════════════════════════════════════════════════
@@ -206,11 +178,23 @@ async function auswerten() {
   const t0 = zahl('t0'), t10 = zahl('t10'), t50 = zahl('t50'), t90 = zahl('t90');
   const { YA, DU, kS } = signalwerte();
 
-  const zeitenDa = [t0, t10, t50, t90].every(v => v !== null);
-  const monoton = zeitenDa && t0 <= t10 && t10 <= t50 && t50 <= t90;
-  $('zeitMsg').hidden = !zeitenDa || monoton;
+  // Zeitfelder markieren, solange die Reihenfolge nicht stimmt
+  const reihenfolgeOk = [t0, t10, t50, t90].every(v => v !== null)
+                        && t0 <= t10 && t10 <= t50 && t50 <= t90;
+  const angefangen = [t10, t50, t90].some(v => v !== null);
+  $('zeitMsg').hidden = !angefangen || reihenfolgeOk;
+  for (const id of ['t10', 't50', 't90']) {
+    $(id).classList.toggle('is-fehler', angefangen && !reihenfolgeOk);
+  }
 
-  if (!monoton) { S.erg = null; kennwerteAnzeigen(); zeichnen(); return; }
+  if (!reihenfolgeOk) {
+    // Kein Modell – die Messkurve wird trotzdem gezeichnet, denn genau
+    // aus ihr sollen t10/t50/t90 abgelesen werden.
+    S.erg = null;
+    kennwerteAnzeigen();
+    zeichnen();
+    return;
+  }
 
   const anfrage = {
     t0, t10, t50, t90,
@@ -248,21 +232,24 @@ function statusSetzen(ok) {
   b.className = 'agp-badge ' + (ok ? 'is-ok' : 'is-err');
 }
 
-// ══ Kennwerte-Tabelle ═════════════════════════════════════════════════════
+// ══ Kennwerte ═════════════════════════════════════════════════════════════
 function kennwerteAnzeigen() {
   const e = S.erg;
-  const zeilen = {
-    m1:  e ? [e.n_opt_m1, e.T_n_opt_m1, e.var_n_opt_m1] : [null, null, null],
-    opt: e ? [e.n_opt,    e.T_n_opt,    e.var_n_opt]    : [null, null, null],
-    p1:  e ? [e.n_opt_p1, e.T_n_opt_p1, e.var_n_opt_p1] : [null, null, null],
+  const setze = (suffix, n, T, V) => {
+    $('n' + suffix).value   = (n === null || n === undefined) ? 'n.a.' : String(n);
+    $('T' + suffix).value   = fmtNA(T, 3);
+    $('Var' + suffix).value = fmtNA(V, 5);
   };
-  for (const [k, [n, T, V]] of Object.entries(zeilen)) {
-    const tr = document.querySelector(`#kennwerteTab tr[data-row="${k}"]`);
-    tr.querySelector('.n').textContent   = (n === null || n === undefined) ? '–' : n;
-    tr.querySelector('.T').textContent   = fmt(T);
-    tr.querySelector('.Var').textContent = fmt(V, 6);
-    tr.classList.toggle('is-leer', n === null || n === undefined);
+  if (!e || !e.gueltig) {
+    setze('M1', null, null, null);
+    setze('Opt', null, null, null);
+    setze('P1', null, null, null);
+    $('nOpt').value = '';
+    return;
   }
+  setze('M1',  e.n_opt_m1, e.T_n_opt_m1, e.var_n_opt_m1);
+  setze('Opt', e.n_opt,    e.T_n_opt,    e.var_n_opt);
+  setze('P1',  e.n_opt_p1, e.T_n_opt_p1, e.var_n_opt_p1);
 }
 
 // ══ Diagramm ══════════════════════════════════════════════════════════════
@@ -276,17 +263,16 @@ function zeichnen() {
   const div = $('plot');
   const e = S.erg;
   const hatMess = !!S.mess;
+  const hatModell = !!(e && e.gueltig && e.zeit_effektiv && e.zeit_effektiv.length);
 
-  if (!e || !e.gueltig || !e.zeit_effektiv || e.zeit_effektiv.length === 0) {
-    Plotly.purge(div);
-    return;
-  }
+  // Zeitachse: die Messung hat Vorrang; ohne Messung der synthetische Vektor
+  const t = hatMess ? S.mess.zeit : (hatModell ? e.zeit_effektiv : []);
+  if (t.length === 0) { Plotly.purge(div); return; }
 
-  const t = e.zeit_effektiv;
   const vn = hatMess ? S.mess.var_namen : { zeit: 'Zeit', y: 'y', u: 'u' };
   const zeigen = { m1: $('showM1').checked, opt: $('showOpt').checked, p1: $('showP1').checked };
 
-  // — obere Kurven: Messung und Modelle —
+  // — obere Kurven —
   const traces = [];
   if (hatMess) {
     traces.push({
@@ -294,17 +280,19 @@ function zeichnen() {
       line: { width: 2, color: 'blue' }, xaxis: 'x', yaxis: 'y',
     });
   }
-  const modelle = [
-    ['m1',  e.modell_m1,  e.n_opt_m1, 'n−1'],
-    ['opt', e.modell_opt, e.n_opt,    'n opt'],
-    ['p1',  e.modell_p1,  e.n_opt_p1, 'n+1'],
-  ];
-  for (const [k, daten, n, bez] of modelle) {
-    if (!zeigen[k] || !daten || daten.length === 0) continue;
-    traces.push({
-      x: t, y: daten, mode: 'lines', name: `PT${n} (${bez})`,
-      line: { ...STIL[k] }, xaxis: 'x', yaxis: 'y',
-    });
+  if (hatModell) {
+    const modelle = [
+      ['m1',  e.modell_m1,  e.n_opt_m1, 'n−1'],
+      ['opt', e.modell_opt, e.n_opt,    'n opt'],
+      ['p1',  e.modell_p1,  e.n_opt_p1, 'n+1'],
+    ];
+    for (const [k, daten, n, bez] of modelle) {
+      if (!zeigen[k] || !daten || daten.length === 0) continue;
+      traces.push({
+        x: t, y: daten, mode: 'lines', name: `PT${n} (${bez})`,
+        line: { ...STIL[k] }, xaxis: 'x', yaxis: 'y',
+      });
+    }
   }
 
   // — unteres Diagramm: nur mit Messdaten sinnvoll —
@@ -322,28 +310,30 @@ function zeichnen() {
       const feld = { 2: 'diffs', 3: 'diff_qu', 4: 'kum_summe' }[S.darstellung];
       const bez  = { 2: 'Δy', 3: 'Δy²', 4: 'Σ' }[S.darstellung];
       y2titel    = { 2: 'Abweichung Δy(t)', 3: 'Δy²(t)', 4: 'Σ Δy²·Δt' }[S.darstellung];
-      const abw = { m1: e.abw_m1, opt: e.abw_opt, p1: e.abw_p1 };
-      const nr  = { m1: e.n_opt_m1, opt: e.n_opt, p1: e.n_opt_p1 };
-      for (const k of ['m1', 'opt', 'p1']) {
-        if (!zeigen[k]) continue;
-        const d = abw[k] && abw[k][feld];
-        if (!d || d.length === 0) continue;
-        traces.push({
-          x: t, y: d, mode: 'lines', name: `${bez} PT${nr[k]}`,
-          line: { ...STIL[k] }, xaxis: 'x2', yaxis: 'y2',
-        });
+      if (hatModell) {
+        const abw = { m1: e.abw_m1, opt: e.abw_opt, p1: e.abw_p1 };
+        const nr  = { m1: e.n_opt_m1, opt: e.n_opt, p1: e.n_opt_p1 };
+        for (const k of ['m1', 'opt', 'p1']) {
+          if (!zeigen[k]) continue;
+          const d = abw[k] && abw[k][feld];
+          if (!d || d.length === 0) continue;
+          traces.push({
+            x: t, y: d, mode: 'lines', name: `${bez} PT${nr[k]}`,
+            line: { ...STIL[k] }, xaxis: 'x2', yaxis: 'y2',
+          });
+        }
       }
     }
   }
 
-  // — Hilfslinien: nur mit gültigen Koordinaten, sonst bricht der Hover-Layer —
+  // — Hilfslinien: jede mit eigener Gültigkeitsprüfung, denn eine einzige
+  //   NaN-Koordinate deaktiviert in Plotly den gesamten Hover-Layer —
   const { YA, YE, DY } = signalwerte();
   const t0 = zahl('t0'), t10 = zahl('t10'), t50 = zahl('t50'), t90 = zahl('t90');
   const tMin = Math.min(...t), tMax = Math.max(...t);
   const shapes = [], annots = [];
-  const gueltigYA = YA !== null && YE !== null;
 
-  if (gueltigYA) {
+  if (YA !== null && YE !== null) {
     for (const y of [YA, YE]) {
       shapes.push({ type: 'line', x0: tMin, x1: tMax, y0: y, y1: y,
                     xref: 'x', yref: 'y', line: { color: 'red', width: 2, dash: 'dash' } });
@@ -354,8 +344,7 @@ function zeichnen() {
       annots.push({ x: t0, y: YA, xref: 'x', yref: 'y', text: 't₀',
                     showarrow: false, yshift: -18, font: { size: 12, color: 'orange' } });
     }
-    const marken = [[t10, 0.10, 't10'], [t50, 0.50, 't50'], [t90, 0.90, 't90']];
-    for (const [tw, p, bez] of marken) {
+    for (const [tw, p, bez] of [[t10, 0.10, 't10'], [t50, 0.50, 't50'], [t90, 0.90, 't90']]) {
       if (tw === null || DY === null) continue;
       const yw = YA + p * DY;
       shapes.push({ type: 'line', x0: tMin, x1: tw, y0: yw, y1: yw,
@@ -368,7 +357,7 @@ function zeichnen() {
   }
 
   // — Endwerte des Integrals beschriften —
-  if (hatMess && S.darstellung === 4) {
+  if (hatMess && hatModell && S.darstellung === 4) {
     const eintraege = [
       [e.abw_m1,  e.n_opt_m1, STIL.m1.color,  0,   zeigen.m1],
       [e.abw_opt, e.n_opt,    STIL.opt.color, -28, zeigen.opt],

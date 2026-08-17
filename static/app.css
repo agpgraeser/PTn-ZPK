@@ -1,53 +1,105 @@
 /* app.css – App-Spezifisches zur PTn-Parameterbestimmung.
    Alles Gemeinsame kommt aus agp-design-system.css (Master:
-   F:\Dropbox\1_a_a_WebApp\_AGP-DesignSystem\). */
+   F:\Dropbox\1_a_a_WebApp\_AGP-DesignSystem\).
+
+   Die Raster bilden das Layout der Vorgaenger-App nach (ParameterPanel.tsx):
+   Label und Eingabefeld stehen nebeneinander, feste Feldbreite, damit die
+   Spalten ueber alle Zeilen fluchten. */
 
 /* Die Plotly-Diagramme sind noch nicht dark-mode-tauglich – Seite hell pinnen
    (gleiche Entscheidung wie in RegelkreisSimulationen). */
 :root { color-scheme: light; }
 
-/* ── Kennwerte-Tabelle ─────────────────────────────────────────────────── */
-table.kennwerte {
+/* ── Kompakte Eingaberaster ────────────────────────────────────────────── */
+
+/* Signalwerte: Label | Feld | Label | Feld | Label | Feld  (3 Paare je Zeile) */
+.row6 {
+  display: grid;
+  grid-template-columns: max-content 90px max-content 90px max-content 90px;
+  column-gap: 6px;
+  row-gap: 4px;
+  align-items: center;
+}
+
+/* ZPK-Zeiten: Label | Feld | Label | Feld  (2 Paare je Zeile) */
+.row4 {
+  display: grid;
+  grid-template-columns: max-content 90px max-content 90px;
+  column-gap: 6px;
+  row-gap: 4px;
+  align-items: center;
+}
+
+/* Kennwerte je Modell:
+   Haken | n-Label | Wert | T-Label | Wert | Var-Label | Wert */
+.rowPTn {
+  display: grid;
+  grid-template-columns: 20px max-content 40px max-content 78px max-content 78px;
+  column-gap: 4px;
+  row-gap: 4px;
+  align-items: center;
+}
+
+/* Labels in den Rastern: kompakt, nicht umbrechen */
+.row6 > label,
+.row4 > label,
+.rowPTn > label {
+  font-size: 12px;
+  color: var(--agp-muted, #555);
+  white-space: nowrap;
+  margin: 0;
+}
+
+/* Eingabefelder in den Rastern: einheitlich schmal, sonst sprengen sie die Spalte */
+.row6 input,
+.row4 input,
+.rowPTn input {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 8px;
-  font-size: 13px;
+  min-width: 0;                 /* verhindert, dass Felder das Raster aufblaehen */
+  box-sizing: border-box;
+  padding: 3px 6px;
+  font-size: 12px;
+  text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-table.kennwerte th,
-table.kennwerte td {
-  padding: 4px 6px;
-  text-align: right;
-  border-bottom: 1px solid var(--agp-line, #e0e0e0);
+/* Nur-Lese-Felder optisch zuruecknehmen */
+.row6 input[readonly],
+.row4 input[readonly],
+.rowPTn input[readonly] {
+  background: var(--agp-surface-2, #f5f5f5);
+  color: var(--agp-muted, #555);
 }
 
-table.kennwerte th {
+/* Fehlerhafte Zeiteingabe markieren */
+input.is-fehler { border-color: #d32f2f !important; background: #fff5f5; }
+
+/* Ueberschrift ueber die volle Rasterbreite (wie im Original zentriert) */
+.row6 > .rasterTitel {
+  grid-column: 1 / -1;
+  text-align: center;
   font-weight: 600;
-  color: var(--agp-muted, #666);
-  text-align: right;
-  white-space: nowrap;
-}
-
-table.kennwerte th:first-child,
-table.kennwerte td:first-child {
-  text-align: left;
+  font-size: 13px;
+  margin-bottom: 4px;
 }
 
 /* Die Modellkennzeichnung traegt die Farbe der zugehoerigen Kurve im
    Diagramm – so ist ohne Legende klar, welche Zeile welche Kurve ist. */
-table.kennwerte td.mk {
-  font-weight: 600;
-  border-left: 3px solid transparent;
-  padding-left: 6px;
-  white-space: nowrap;
-}
-table.kennwerte td.mk--m1  { border-left-color: orange;  }
-table.kennwerte td.mk--opt { border-left-color: red;     }
-table.kennwerte td.mk--p1  { border-left-color: #43a047; }
+.rowPTn > label.mk--m1  { border-left: 3px solid orange;  padding-left: 4px; }
+.rowPTn > label.mk--opt { border-left: 3px solid red;     padding-left: 4px; }
+.rowPTn > label.mk--p1  { border-left: 3px solid #43a047; padding-left: 4px; }
 
-/* Randfaelle: bei n = 1 gibt es kein n-1, bei n = 10 kein n+1 */
-table.kennwerte tr.is-leer { opacity: .4; }
+/* kS steht in derselben Zeile wie die Abschnittsueberschrift */
+.kS-zeile { display: flex; align-items: center; gap: 8px; }
+.kS-zeile input { width: 90px; text-align: right; padding: 3px 6px; font-size: 12px; }
+
+/* ── Panel etwas dichter als der Design-System-Standard ────────────────── */
+.agp-panel { gap: 10px; }
+.agp-panel .agp-card { padding: 10px 14px 12px; }
+.agp-panel .agp-card__head { margin-bottom: 8px; padding-bottom: 6px; }
+
+/* Darstellungs-Umschalter hat 4 Optionen → umbrechen statt scrollen */
+#segDarstellung { flex-wrap: wrap; overflow-x: visible; }
 
 /* ── Diagramm ──────────────────────────────────────────────────────────── */
-#plot { min-height: 420px; }
+#plot { min-height: 460px; }
