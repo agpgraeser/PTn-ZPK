@@ -24,6 +24,8 @@
   </div>
   <div class="agp-header__sep"></div>
   <div class="agp-header__title">PTn-Parameter Tool</div>
+  <button class="agp-btn agp-btn--ghost agp-btn--sm" onclick="pruefseiteZeigen()"
+          title="Alle Zwischenergebnisse der ZPK-Rechnung nachvollziehen">Berechnungen überprüfen …</button>
   <button class="agp-btn agp-btn--ghost agp-btn--sm" onclick="allesZuruecksetzen()"
           title="Alle Eingaben und geladene Messdaten zurücksetzen">↺ Zurücksetzen</button>
   <div class="agp-header__spacer"></div>
@@ -135,6 +137,15 @@
     </div>
   </section>
 
+</div>
+
+<!-- ══ Überprüfungsseite (liegt über der Arbeitsfläche) ══ -->
+<div id="pruefseite" class="pruefseite" hidden>
+  <div class="pruefseite__kopf">
+    <h2>Überprüfung der Berechnungen</h2>
+    <button class="agp-btn agp-btn--primary agp-btn--sm" onclick="pruefseiteSchliessen()">← Zurück</button>
+  </div>
+  <div class="pruefseite__raster" id="pruefInhalt"></div>
 </div>
 
 <script>
@@ -404,6 +415,108 @@ function zeichnen() {
     : 'PTn – Modellkurven (keine Messdaten)';
 }
 
+// ══ Überprüfungsseite ═════════════════════════════════════════════════════
+// Zeigt alle Zwischengrößen der ZPK-Rechnung, damit man sie von Hand
+// nachrechnen kann (portiert aus DebugPage.tsx der Vorgänger-App).
+
+let konstanten = null;   // Tabellen der Methode; einmal beim Start geholt
+
+const esc = (s) => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const naOder = (v, n) => (v === null || v === undefined) ? 'n.a.' : Number(v).toFixed(n);
+
+function wert(bez, v) {
+  return `<div class="pw"><span class="pw__b">${esc(bez)}</span><span class="pw__v">${esc(v ?? 'n.a.')}</span></div>`;
+}
+
+/** 10er-Vektor als fünfspaltiges Raster */
+function vek10(bez, werte, n = 4) {
+  if (!werte) return wert(bez, null);
+  const zellen = werte.map((v, i) => `<span class="pv">[${i + 1}] ${Number(v).toFixed(n)}</span>`).join('');
+  return `<div class="pblock"><div class="pw__b">${esc(bez)}</div><div class="pvec">${zellen}</div></div>`;
+}
+
+/** 10×3-Matrix als Tabelle */
+function mat10x3(bez, werte, n = 4) {
+  if (!werte) return wert(bez, null);
+  const zeilen = werte.map((z, i) =>
+    `<tr><td>${i + 1}</td>` + z.map(v => `<td>${Number(v).toFixed(n)}</td>`).join('') + '</tr>').join('');
+  return `<div class="pblock"><div class="pw__b">${esc(bez)}</div>
+    <table class="pmat"><thead><tr><th>n</th><th>Sp.1</th><th>Sp.2</th><th>Sp.3</th></tr></thead>
+    <tbody>${zeilen}</tbody></table></div>`;
+}
+
+function abschnitt(titel, inhalt) {
+  return `<section class="pabschnitt"><h3>${esc(titel)}</h3>${inhalt}</section>`;
+}
+
+function pruefseiteFuellen() {
+  const e = S.erg;
+  const g = (id) => $(id).value;
+  const { DY, DU, kS } = signalwerte();
+  const tv = e && e.t_vec;
+
+  const b1 = ['YA', 'YE', 'UA', 'UE'].map(id => wert(id, g(id))).join('')
+    + wert('DY', fmt(DY, 4)) + wert('DU', fmt(DU, 4)) + wert('kS = DY/DU', fmt(kS, 4))
+    + ['t0', 't10', 't50', 't90'].map(id => wert(id === 't0' ? 't₀' : id, g(id))).join('');
+
+  const b2 = wert('tvec[0] = t10−t₀', tv ? tv[0].toFixed(4) : null)
+    + wert('tvec[1] = t50−t₀', tv ? tv[1].toFixed(4) : null)
+    + wert('tvec[2] = t90−t₀', tv ? tv[2].toFixed(4) : null)
+    + wert('myMess1090', e && e.my_mess_1090 !== null ? e.my_mess_1090.toFixed(5) : null)
+    + vek10('myDiff (|myMess − myTheo|)', e && e.my_diff)
+    + wert('nopt (argmin myDiff)', e && e.n_opt);
+
+  const b3 = vek10('Zeiten [n = 1..10]', e && e.zeiten);
+
+  const b4 = mat10x3('ZWWerte (10×3)', e && e.zw_werte)
+    + vek10('ZWmean', e && e.zw_mean)
+    + vek10('ZWVar', e && e.zw_var, 6);
+
+  const b5 = wert('noptm1', e && e.n_opt_m1)
+    + wert('Tnoptm1', naOder(e && e.T_n_opt_m1, 4))
+    + wert('Varnoptm1', naOder(e && e.var_n_opt_m1, 6))
+    + wert('nopt', e && e.n_opt)
+    + wert('Tnopt', naOder(e && e.T_n_opt, 4))
+    + wert('Varnopt', naOder(e && e.var_n_opt, 6))
+    + wert('noptp1', e && e.n_opt_p1)
+    + wert('Tnoptp1', naOder(e && e.T_n_opt_p1, 4))
+    + wert('Varnoptp1', naOder(e && e.var_n_opt_p1, 6));
+
+  const b6 = konstanten
+    ? vek10('myTheo1090', konstanten.my_theo_1090)
+      + mat10x3('alpha', konstanten.alpha)
+      + mat10x3('alphaInv', konstanten.alpha_inv)
+    : wert('Konstanten', 'nicht geladen');
+
+  $('pruefInhalt').innerHTML =
+      abschnitt('1 · Eingaben', b1)
+    + abschnitt('2 · tvec, myMess1090, myDiff, nopt', b2)
+    + abschnitt('3 · Zeiten = (1/3)·alpha·tvec', b3)
+    + abschnitt('4 · ZWWerte, ZWmean, ZWVar', b4)
+    + abschnitt('5 · Wertzuweisungen (nopt−1 / nopt / nopt+1)', b5)
+    + abschnitt('6 · Referenz: myTheo1090, alpha, alphaInv', b6);
+
+  if (!e || !e.gueltig) {
+    $('pruefInhalt').insertAdjacentHTML('afterbegin',
+      '<div class="agp-msg agp-msg--warn" style="grid-column:1/-1">'
+      + 'Noch kein gültiges Ergebnis – bitte t₀ ≤ t10 ≤ t50 ≤ t90 eingeben. '
+      + 'Die Referenztabellen unten gelten unabhängig davon.</div>');
+  }
+}
+
+function pruefseiteZeigen() {
+  pruefseiteFuellen();
+  $('pruefseite').hidden = false;
+}
+
+function pruefseiteSchliessen() {
+  $('pruefseite').hidden = true;
+}
+
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape' && !$('pruefseite').hidden) pruefseiteSchliessen();
+});
+
 // ══ Messdaten laden ═══════════════════════════════════════════════════════
 $('dateiInput').addEventListener('change', async (ev) => {
   const datei = ev.target.files && ev.target.files[0];
@@ -467,6 +580,10 @@ function allesZuruecksetzen() {
     const r = await fetch('/api/health');
     statusSetzen(r.ok);
   } catch { statusSetzen(false); }
+  try {
+    const r = await fetch('/api/konstanten');
+    if (r.ok) konstanten = await r.json();
+  } catch { /* Prüfseite zeigt dann "nicht geladen" */ }
   signalwerteAnzeigen();
   auswerten();
 })();

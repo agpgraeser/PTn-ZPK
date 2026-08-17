@@ -82,6 +82,17 @@ def auswertung(req: AuswertungRequest):
         raise HTTPException(status_code=500, detail=f"Interner Fehler: {ex}")
 
 
+@app.get("/api/konstanten")
+def konstanten():
+    """Die Tabellen der ZPK-Methode fuer die Ueberpruefungsseite.
+    Aendern sich nie – das Frontend holt sie einmal beim Start."""
+    return {
+        "my_theo_1090": ptn_zpk.MY_THEO_1090,
+        "alpha": ptn_zpk.ALPHA,
+        "alpha_inv": ptn_zpk.ALPHA_INV,
+    }
+
+
 @app.post("/api/messdaten")
 async def messdaten(datei: UploadFile):
     """Liest eine Excel-Messdatei (Zeit | y | u)."""

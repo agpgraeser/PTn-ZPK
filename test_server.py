@@ -164,3 +164,16 @@ def test_excel_route_meldet_fehler_verstaendlich():
                     files={"datei": ("kaputt.xlsx", b"kein xlsx", "application/octet-stream")})
     assert r.status_code == 400
     assert "detail" in r.json()
+
+
+def test_konstanten_endpunkt():
+    """Die Prueseite braucht die Tabellen der Methode."""
+    r = client.get("/api/konstanten")
+    assert r.status_code == 200
+    k = r.json()
+    assert len(k["my_theo_1090"]) == 10
+    assert len(k["alpha"]) == 10 and all(len(z) == 3 for z in k["alpha"])
+    # alpha_inv ist die elementweise Inverse
+    for za, zi in zip(k["alpha"], k["alpha_inv"]):
+        for a, i in zip(za, zi):
+            assert i == pytest.approx(1.0 / a)
