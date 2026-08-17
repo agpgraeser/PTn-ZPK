@@ -50,7 +50,15 @@ die Zeitkonstante T (auf 1 % genau) zurück.
       https://github.com/agpgraeser/PTn-ZPK – öffentlich, Branch `main`
       (wie `agp_control_kern`). Vor der Veröffentlichung auf Zugangsdaten
       geprüft, keine gefunden.
-- [ ] Render-Deployment einrichten (`render.yaml` liegt bereit)
+- [x] **Live unter https://ptn-zpk.onrender.com** (2026-08-17).
+      Fachlich geprüft: exaktes PT4 ergibt n=4, T=1,9995, Var 6,5·10⁻⁸.
+      Karte in der HdT-Oberfläche freigeschaltet.
+- [ ] ⚠️ **Dienst flattert:** ca. 13 von 15 Abrufen kommen durch, der Rest
+      endet mit `x-render-routing: no-server`. Das kommt von Renders
+      Routing, nicht von der App (eine echte App-404 sähe anders aus, und
+      OpenAPI zeigt alle Routen). `ptn-vergleich` läuft mit derselben
+      Bauart 15/15 – also dienstspezifisch. Render-Logs/Events prüfen:
+      hängengebliebener Deploy oder Neustart (Free-Plan: 512 MB, numpy).
 - [ ] AGP-Projektdatei in der Oberfläche anbinden (Server-Routen existieren)
 - [ ] Vergleich alte ./. neue App mit denselben Messdaten durch den Nutzer
 - [ ] Danach: PTkPTn-Vergleiche nach demselben Muster portieren
