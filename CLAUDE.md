@@ -69,10 +69,6 @@ Gültigkeitsprüfung – eine einzige NaN-Koordinate deaktiviert in Plotly den
 gesamten Hover-Layer), keine leeren Traces.
 
 ## Offene Punkte
-- `agp_control_kern` mit dem neuen Modul `ptn_zpk` ist **lokal committet, aber
-  noch nicht gepusht**. Erst nach dem Push funktioniert
-  `pip install -r requirements.txt` (und damit Render), weil der Kern dort von
-  GitHub bezogen wird. Lokal wird er editierbar installiert.
 - AGP-Projektdatei: Lesen/Schreiben ist im Server angelegt
   (`/api/projekt_parse`, `/api/projekt_xlsx`), in der Oberfläche aber noch
   nicht angebunden.

@@ -42,9 +42,10 @@ die Zeitkonstante T (auf 1 % genau) zurück.
 
 **Offene Punkte**
 
-- [ ] `agp_control_kern` pushen – ohne Push schlägt
-      `pip install -r requirements.txt` fehl (Kern wird von GitHub bezogen)
-      und Render kann nicht bauen. Lokal ist er editierbar installiert.
+- [x] `agp_control_kern` gepusht (Commit `e1ac7ea` auf `main`).
+      Gegengeprüft in einem frischen venv: Installation von GitHub liefert
+      `zpk_auswertung`, Probe PT4 ergibt n = 4, T = 1,9995.
+      `pip install -r requirements.txt` funktioniert damit, Render kann bauen.
 - [ ] Eigenes GitHub-Repo für `PTn-ZPK` anlegen und Erstcommit pushen
 - [ ] Render-Deployment einrichten (`render.yaml` liegt bereit)
 - [ ] AGP-Projektdatei in der Oberfläche anbinden (Server-Routen existieren)
