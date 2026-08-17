@@ -1,0 +1,53 @@
+/* app.css – App-Spezifisches zur PTn-Parameterbestimmung.
+   Alles Gemeinsame kommt aus agp-design-system.css (Master:
+   F:\Dropbox\1_a_a_WebApp\_AGP-DesignSystem\). */
+
+/* Die Plotly-Diagramme sind noch nicht dark-mode-tauglich – Seite hell pinnen
+   (gleiche Entscheidung wie in RegelkreisSimulationen). */
+:root { color-scheme: light; }
+
+/* ── Kennwerte-Tabelle ─────────────────────────────────────────────────── */
+table.kennwerte {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+table.kennwerte th,
+table.kennwerte td {
+  padding: 4px 6px;
+  text-align: right;
+  border-bottom: 1px solid var(--agp-line, #e0e0e0);
+}
+
+table.kennwerte th {
+  font-weight: 600;
+  color: var(--agp-muted, #666);
+  text-align: right;
+  white-space: nowrap;
+}
+
+table.kennwerte th:first-child,
+table.kennwerte td:first-child {
+  text-align: left;
+}
+
+/* Die Modellkennzeichnung traegt die Farbe der zugehoerigen Kurve im
+   Diagramm – so ist ohne Legende klar, welche Zeile welche Kurve ist. */
+table.kennwerte td.mk {
+  font-weight: 600;
+  border-left: 3px solid transparent;
+  padding-left: 6px;
+  white-space: nowrap;
+}
+table.kennwerte td.mk--m1  { border-left-color: orange;  }
+table.kennwerte td.mk--opt { border-left-color: red;     }
+table.kennwerte td.mk--p1  { border-left-color: #43a047; }
+
+/* Randfaelle: bei n = 1 gibt es kein n-1, bei n = 10 kein n+1 */
+table.kennwerte tr.is-leer { opacity: .4; }
+
+/* ── Diagramm ──────────────────────────────────────────────────────────── */
+#plot { min-height: 420px; }

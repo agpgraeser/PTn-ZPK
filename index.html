@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AGP·Control – PTn-Parameter · ZPK</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1' y='1' width='30' height='30' rx='8' fill='%233949ab'/%3E%3Cpath d='M5 24 L11 24 L11 12 Q16 6 19 11 T25 10' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='5' y1='10' x2='25' y2='10' stroke='%234dd0c4' stroke-width='1.4' stroke-dasharray='2 2'/%3E%3C/svg%3E" />
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <link rel="stylesheet" href="/static/agp-design-system.css" />
+  <link rel="stylesheet" href="/static/app.css" />
+</head>
+<body class="agp-app">
+
+<!-- ══ AGP·Control-Kopf ══ -->
+<header class="agp-header">
+  <div class="agp-brand">
+    <svg class="agp-brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+      <rect x="1" y="1" width="30" height="30" rx="8" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.5)"/>
+      <path d="M5 24 L11 24 L11 12 Q16 6 19 11 T25 10" fill="none" stroke="#fff" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="5" y1="10" x2="25" y2="10" stroke="#4dd0c4" stroke-width="1.4" stroke-dasharray="2 2"/>
+    </svg>
+    <div class="agp-brand__word">AGP<b>·Control</b></div>
+  </div>
+  <div class="agp-header__sep"></div>
+  <div class="agp-header__title">PTn-Parameter nach der ZPK-Methode</div>
+  <button class="agp-btn agp-btn--ghost agp-btn--sm" onclick="allesZuruecksetzen()"
+          title="Alle Eingaben und geladene Messdaten zurücksetzen">↺ Zurücksetzen</button>
+  <div class="agp-header__spacer"></div>
+  <small class="agp-header__sys" id="sysName">Keine Messdaten geladen</small>
+  <span id="statusBadge" class="agp-badge is-err">Server offline</span>
+</header>
+
+<!-- ══ Arbeitsfläche: 1/3 Parameter · 2/3 Grafik ══ -->
+<div class="agp-workspace">
+
+  <!-- ── Parameter-Panel ── -->
+  <aside class="agp-panel">
+
+    <div class="agp-card">
+      <div class="agp-card__head"><h3 class="agp-card__title is-brand">Signalwerte</h3></div>
+      <div class="agp-grid agp-grid--3">
+        <div class="agp-field">
+          <label class="agp-label" title="Ausgangsgröße vor dem Sprung">YA</label>
+          <input class="agp-input" type="number" id="YA" value="0" step="any" />
+        </div>
+        <div class="agp-field">
+          <label class="agp-label" title="Ausgangsgröße im Beharrungszustand">YE</label>
+          <input class="agp-input" type="number" id="YE" value="1" step="any" />
+        </div>
+        <div class="agp-field">
+          <label class="agp-label" title="Änderung der Ausgangsgröße: YE − YA">DY</label>
+          <input class="agp-input agp-input--readonly" id="DY" readonly />
+        </div>
+        <div class="agp-field">
+          <label class="agp-label" title="Stellgröße vor dem Sprung">UA</label>
+          <input class="agp-input" type="number" id="UA" value="0" step="any" />
+        </div>
+        <div class="agp-field">
+          <label class="agp-label" title="Stellgröße nach dem Sprung">UE</label>
+          <input class="agp-input" type="number" id="UE" value="1" step="any" />
+        </div>
+        <div class="agp-field">
+          <label class="agp-label" title="Sprunghöhe der Stellgröße: UE − UA">DU</label>
+          <input class="agp-input agp-input--readonly" id="DU" readonly />
+        </div>
+      </div>
+      <div class="agp-field" style="margin-top:8px">
+        <label class="agp-label" title="Zeitpunkt des Stellgrößensprungs">t₀</label>
+        <input class="agp-input" type="number" id="t0" value="0" step="any" />
+      </div>
+    </div>
+
+    <div class="agp-card">
+      <div class="agp-card__head">
+        <h3 class="agp-card__title is-brand">Eingaben Zeit-Prozent-Kennwert-Methode</h3>
+      </div>
+      <div class="agp-hint">Zeiten, zu denen die Sprungantwort 10 %, 50 % und 90 % erreicht.</div>
+      <div class="agp-grid agp-grid--2">
+        <div class="agp-field">
+          <label class="agp-label">Y10</label>
+          <input class="agp-input agp-input--readonly" id="Y10" readonly />
+        </div>
+        <div class="agp-field">
+          <label class="agp-label">t10</label>
+          <input class="agp-input" type="number" id="t10" step="any" />
+        </div>
+        <div class="agp-field">
+          <label class="agp-label">Y50</label>
+          <input class="agp-input agp-input--readonly" id="Y50" readonly />
+        </div>
+        <div class="agp-field">
+          <label class="agp-label">t50</label>
+          <input class="agp-input" type="number" id="t50" step="any" />
+        </div>
+        <div class="agp-field">
+          <label class="agp-label">Y90</label>
+          <input class="agp-input agp-input--readonly" id="Y90" readonly />
+        </div>
+        <div class="agp-field">
+          <label class="agp-label">t90</label>
+          <input class="agp-input" type="number" id="t90" step="any" />
+        </div>
+      </div>
+      <div class="agp-msg agp-msg--warn" id="zeitMsg" hidden>
+        t₀ ≤ t10 ≤ t50 ≤ t90 muss gelten.
+      </div>
+    </div>
+
+    <div class="agp-card">
+      <div class="agp-card__head"><h3 class="agp-card__title is-brand">Berechnete Kennwerte</h3></div>
+      <div class="agp-field">
+        <label class="agp-label" title="Streckenverstärkung: DY / DU">kS</label>
+        <input class="agp-input agp-input--readonly" id="kS" readonly />
+      </div>
+      <table class="kennwerte" id="kennwerteTab">
+        <thead>
+          <tr><th>Modell</th><th>n</th><th>T</th><th>Var</th></tr>
+        </thead>
+        <tbody>
+          <tr data-row="m1">  <td class="mk mk--m1">n opt−1</td><td class="v n"></td><td class="v T"></td><td class="v Var"></td></tr>
+          <tr data-row="opt"> <td class="mk mk--opt">n opt</td>  <td class="v n"></td><td class="v T"></td><td class="v Var"></td></tr>
+          <tr data-row="p1">  <td class="mk mk--p1">n opt+1</td> <td class="v n"></td><td class="v T"></td><td class="v Var"></td></tr>
+        </tbody>
+      </table>
+      <div class="agp-hint">Var = Streuung der drei Einzelschätzungen; klein = die drei Zeitwerte passen gut zu dieser Ordnung.</div>
+    </div>
+
+    <div class="agp-card">
+      <div class="agp-card__head"><h3 class="agp-card__title">Modellkurven</h3></div>
+      <label class="agp-check"><input type="checkbox" id="showM1" checked /> <span>n opt−1</span></label>
+      <label class="agp-check"><input type="checkbox" id="showOpt" checked /> <span>n opt</span></label>
+      <label class="agp-check"><input type="checkbox" id="showP1" checked /> <span>n opt+1</span></label>
+    </div>
+
+    <div class="agp-card">
+      <div class="agp-card__head"><h3 class="agp-card__title">Darstellung (unteres Diagramm)</h3></div>
+      <div class="agp-segmented" id="segDarstellung" role="group" aria-label="Darstellung">
+        <button type="button" data-value="1" aria-pressed="true">Stellgröße</button>
+        <button type="button" data-value="2" aria-pressed="false">Abweichung</button>
+        <button type="button" data-value="3" aria-pressed="false">Δy²</button>
+        <button type="button" data-value="4" aria-pressed="false">Σ Δy²·Δt</button>
+      </div>
+      <div class="agp-hint" id="darstellungHinweis">Ohne Messdaten wird nur die Modellkurve gezeichnet.</div>
+    </div>
+
+    <div class="agp-card">
+      <div class="agp-card__head"><h3 class="agp-card__title">Messdaten laden</h3></div>
+      <input type="file" id="dateiInput" accept=".xlsx,.xlsm,.xls" hidden />
+      <button class="agp-btn agp-btn--secondary agp-btn--block" onclick="dateiInput.click()">
+        Datei laden
+      </button>
+      <div class="agp-hint" id="dateiInfo">Excel: Spalte 1 Zeit, Spalte 2 Ausgangsgröße y, Spalte 3 Stellgröße u (optional).</div>
+      <div class="agp-msg agp-msg--err" id="dateiFehler" hidden></div>
+    </div>
+
+  </aside>
+
+  <!-- ── Grafik ── -->
+  <section class="agp-output">
+    <div class="agp-card agp-chart-card">
+      <div class="agp-card__head"><h3 class="agp-card__title is-brand" id="plotTitel">PTn – Modellkurven</h3></div>
+      <div id="plot" class="agp-chart"></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ══ Zustand ═══════════════════════════════════════════════════════════════
+const S = {
+  mess: null,          // {zeit, y_daten, u_daten, var_namen, dateiname, systemname}
+  erg: null,           // Antwort von /api/auswertung
+  darstellung: 1,
+};
+
+const $ = (id) => document.getElementById(id);
+const zahl = (id) => { const v = parseFloat($(id).value); return isFinite(v) ? v : null; };
+const fmt = (v, n = 4) => (v === null || v === undefined || !isFinite(v)) ? '' : Number(v).toFixed(n);
+
+// ══ Abgeleitete Eingabegrößen ═════════════════════════════════════════════
+function signalwerte() {
+  const YA = zahl('YA'), YE = zahl('YE'), UA = zahl('UA'), UE = zahl('UE');
+  const DY = (YA !== null && YE !== null) ? YE - YA : null;
+  const DU = (UA !== null && UE !== null) ? UE - UA : null;
+  const kS = (DY !== null && DU !== null && DU !== 0) ? DY / DU : null;
+  return { YA, YE, UA, UE, DY, DU, kS };
+}
+
+function signalwerteAnzeigen() {
+  const { YA, DY, DU, kS } = signalwerte();
+  $('DY').value = fmt(DY);
+  $('DU').value = fmt(DU);
+  $('kS').value = fmt(kS);
+  // Y10/Y50/Y90 sind die Amplituden, zu denen t10/t50/t90 gesucht werden
+  const anteil = (p) => (YA !== null && DY !== null) ? YA + p * DY : null;
+  $('Y10').value = fmt(anteil(0.10));
+  $('Y50').value = fmt(anteil(0.50));
+  $('Y90').value = fmt(anteil(0.90));
+}
+
+// ══ Server ════════════════════════════════════════════════════════════════
+async function auswerten() {
+  signalwerteAnzeigen();
+
+  const t0 = zahl('t0'), t10 = zahl('t10'), t50 = zahl('t50'), t90 = zahl('t90');
+  const { YA, DU, kS } = signalwerte();
+
+  const zeitenDa = [t0, t10, t50, t90].every(v => v !== null);
+  const monoton = zeitenDa && t0 <= t10 && t10 <= t50 && t50 <= t90;
+  $('zeitMsg').hidden = !zeitenDa || monoton;
+
+  if (!monoton) { S.erg = null; kennwerteAnzeigen(); zeichnen(); return; }
+
+  const anfrage = {
+    t0, t10, t50, t90,
+    k_s: kS, d_u: DU, y_a: YA,
+    zeit_daten: S.mess ? S.mess.zeit : null,
+    mess_daten: S.mess ? S.mess.y_daten : null,
+  };
+
+  try {
+    const r = await fetch('/api/auswertung', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(anfrage),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    S.erg = await r.json();
+    statusSetzen(true);
+  } catch (e) {
+    S.erg = null;
+    statusSetzen(false);
+  }
+  kennwerteAnzeigen();
+  zeichnen();
+}
+
+let timer = null;
+function auswertenVerzoegert() {
+  clearTimeout(timer);
+  timer = setTimeout(auswerten, 150);
+}
+
+function statusSetzen(ok) {
+  const b = $('statusBadge');
+  b.textContent = ok ? 'Server bereit' : 'Server offline';
+  b.className = 'agp-badge ' + (ok ? 'is-ok' : 'is-err');
+}
+
+// ══ Kennwerte-Tabelle ═════════════════════════════════════════════════════
+function kennwerteAnzeigen() {
+  const e = S.erg;
+  const zeilen = {
+    m1:  e ? [e.n_opt_m1, e.T_n_opt_m1, e.var_n_opt_m1] : [null, null, null],
+    opt: e ? [e.n_opt,    e.T_n_opt,    e.var_n_opt]    : [null, null, null],
+    p1:  e ? [e.n_opt_p1, e.T_n_opt_p1, e.var_n_opt_p1] : [null, null, null],
+  };
+  for (const [k, [n, T, V]] of Object.entries(zeilen)) {
+    const tr = document.querySelector(`#kennwerteTab tr[data-row="${k}"]`);
+    tr.querySelector('.n').textContent   = (n === null || n === undefined) ? '–' : n;
+    tr.querySelector('.T').textContent   = fmt(T);
+    tr.querySelector('.Var').textContent = fmt(V, 6);
+    tr.classList.toggle('is-leer', n === null || n === undefined);
+  }
+}
+
+// ══ Diagramm ══════════════════════════════════════════════════════════════
+const STIL = {
+  m1:  { color: 'orange',  dash: 'dash', width: 2 },
+  opt: { color: 'red',     dash: 'dot',  width: 3 },
+  p1:  { color: '#43a047', dash: 'dash', width: 2 },
+};
+
+function zeichnen() {
+  const div = $('plot');
+  const e = S.erg;
+  const hatMess = !!S.mess;
+
+  if (!e || !e.gueltig || !e.zeit_effektiv || e.zeit_effektiv.length === 0) {
+    Plotly.purge(div);
+    return;
+  }
+
+  const t = e.zeit_effektiv;
+  const vn = hatMess ? S.mess.var_namen : { zeit: 'Zeit', y: 'y', u: 'u' };
+  const zeigen = { m1: $('showM1').checked, opt: $('showOpt').checked, p1: $('showP1').checked };
+
+  // — obere Kurven: Messung und Modelle —
+  const traces = [];
+  if (hatMess) {
+    traces.push({
+      x: t, y: S.mess.y_daten, mode: 'lines', name: 'Messwert ' + vn.y,
+      line: { width: 2, color: 'blue' }, xaxis: 'x', yaxis: 'y',
+    });
+  }
+  const modelle = [
+    ['m1',  e.modell_m1,  e.n_opt_m1, 'n−1'],
+    ['opt', e.modell_opt, e.n_opt,    'n opt'],
+    ['p1',  e.modell_p1,  e.n_opt_p1, 'n+1'],
+  ];
+  for (const [k, daten, n, bez] of modelle) {
+    if (!zeigen[k] || !daten || daten.length === 0) continue;
+    traces.push({
+      x: t, y: daten, mode: 'lines', name: `PT${n} (${bez})`,
+      line: { ...STIL[k] }, xaxis: 'x', yaxis: 'y',
+    });
+  }
+
+  // — unteres Diagramm: nur mit Messdaten sinnvoll —
+  let y2titel = '';
+  if (hatMess) {
+    if (S.darstellung === 1) {
+      y2titel = 'Stellgröße ' + vn.u;
+      if (S.mess.u_daten && S.mess.u_daten.length === t.length) {
+        traces.push({
+          x: t, y: S.mess.u_daten, mode: 'lines', name: 'Eingang ' + vn.u,
+          line: { width: 2, color: 'green' }, xaxis: 'x2', yaxis: 'y2',
+        });
+      }
+    } else {
+      const feld = { 2: 'diffs', 3: 'diff_qu', 4: 'kum_summe' }[S.darstellung];
+      const bez  = { 2: 'Δy', 3: 'Δy²', 4: 'Σ' }[S.darstellung];
+      y2titel    = { 2: 'Abweichung Δy(t)', 3: 'Δy²(t)', 4: 'Σ Δy²·Δt' }[S.darstellung];
+      const abw = { m1: e.abw_m1, opt: e.abw_opt, p1: e.abw_p1 };
+      const nr  = { m1: e.n_opt_m1, opt: e.n_opt, p1: e.n_opt_p1 };
+      for (const k of ['m1', 'opt', 'p1']) {
+        if (!zeigen[k]) continue;
+        const d = abw[k] && abw[k][feld];
+        if (!d || d.length === 0) continue;
+        traces.push({
+          x: t, y: d, mode: 'lines', name: `${bez} PT${nr[k]}`,
+          line: { ...STIL[k] }, xaxis: 'x2', yaxis: 'y2',
+        });
+      }
+    }
+  }
+
+  // — Hilfslinien: nur mit gültigen Koordinaten, sonst bricht der Hover-Layer —
+  const { YA, YE, DY } = signalwerte();
+  const t0 = zahl('t0'), t10 = zahl('t10'), t50 = zahl('t50'), t90 = zahl('t90');
+  const tMin = Math.min(...t), tMax = Math.max(...t);
+  const shapes = [], annots = [];
+  const gueltigYA = YA !== null && YE !== null;
+
+  if (gueltigYA) {
+    for (const y of [YA, YE]) {
+      shapes.push({ type: 'line', x0: tMin, x1: tMax, y0: y, y1: y,
+                    xref: 'x', yref: 'y', line: { color: 'red', width: 2, dash: 'dash' } });
+    }
+    if (t0 !== null) {
+      shapes.push({ type: 'line', x0: t0, x1: t0, y0: YA, y1: YE,
+                    xref: 'x', yref: 'y', line: { color: 'orange', width: 2, dash: 'dot' } });
+      annots.push({ x: t0, y: YA, xref: 'x', yref: 'y', text: 't₀',
+                    showarrow: false, yshift: -18, font: { size: 12, color: 'orange' } });
+    }
+    const marken = [[t10, 0.10, 't10'], [t50, 0.50, 't50'], [t90, 0.90, 't90']];
+    for (const [tw, p, bez] of marken) {
+      if (tw === null || DY === null) continue;
+      const yw = YA + p * DY;
+      shapes.push({ type: 'line', x0: tMin, x1: tw, y0: yw, y1: yw,
+                    xref: 'x', yref: 'y', line: { color: 'green', width: 1, dash: 'dash' } });
+      shapes.push({ type: 'line', x0: tw, x1: tw, y0: YA, y1: yw,
+                    xref: 'x', yref: 'y', line: { color: 'green', width: 1, dash: 'dash' } });
+      annots.push({ x: tw, y: YA, xref: 'x', yref: 'y', text: bez,
+                    showarrow: false, yshift: -18, font: { size: 12, color: 'blue' } });
+    }
+  }
+
+  // — Endwerte des Integrals beschriften —
+  if (hatMess && S.darstellung === 4) {
+    const eintraege = [
+      [e.abw_m1,  e.n_opt_m1, STIL.m1.color,  0,   zeigen.m1],
+      [e.abw_opt, e.n_opt,    STIL.opt.color, -28, zeigen.opt],
+      [e.abw_p1,  e.n_opt_p1, STIL.p1.color,  -56, zeigen.p1],
+    ];
+    const tEnde = t[t.length - 1];
+    for (const [abw, n, farbe, dy, an] of eintraege) {
+      if (!an || !abw || abw.kum_summe_gesamt === null) continue;
+      annots.push({
+        x: tEnde, y: abw.kum_summe_gesamt, xref: 'x2', yref: 'y2',
+        text: `PT${n}: ${fmt(abw.kum_summe_gesamt)}`,
+        showarrow: true, arrowhead: 2, ax: -70, ay: dy - 20,
+        font: { size: 11, color: farbe }, arrowcolor: farbe,
+      });
+    }
+  }
+
+  const layout = hatMess ? {
+    grid: { rows: 2, columns: 1, roworder: 'top to bottom',
+            pattern: 'independent', heights: [0.67, 0.33], ygap: 0.05 },
+    xaxis:  { title: { text: vn.zeit } },
+    yaxis:  { title: { text: vn.y } },
+    xaxis2: { title: { text: vn.zeit } },
+    yaxis2: { title: { text: y2titel } },
+    shapes, annotations: annots,
+    margin: { t: 20, r: 20, b: 40, l: 60 },
+    autosize: true, hovermode: 'closest',
+  } : {
+    xaxis: { title: { text: 'Zeit' } },
+    yaxis: { title: { text: 'y(t)' } },
+    shapes, annotations: annots,
+    margin: { t: 20, r: 20, b: 40, l: 60 },
+    autosize: true, hovermode: 'closest',
+  };
+
+  // purge + newPlot statt react: erzwingt eine vollständige Neuinitialisierung
+  // des Hover-Layers. Da JS single-threaded ist, sieht der Browser nur den
+  // Endzustand – kein Flimmern.
+  Plotly.purge(div);
+  Plotly.newPlot(div, traces, layout, { responsive: true });
+
+  $('plotTitel').textContent = hatMess
+    ? (S.mess.dateiname || 'PTn – Zeitverläufe')
+    : 'PTn – Modellkurven (keine Messdaten)';
+}
+
+// ══ Messdaten laden ═══════════════════════════════════════════════════════
+$('dateiInput').addEventListener('change', async (ev) => {
+  const datei = ev.target.files && ev.target.files[0];
+  if (!datei) return;
+  const fd = new FormData();
+  fd.append('datei', datei);
+  $('dateiFehler').hidden = true;
+  try {
+    const r = await fetch('/api/messdaten', { method: 'POST', body: fd });
+    if (!r.ok) {
+      const t = await r.json().catch(() => ({ detail: 'Unbekannter Fehler' }));
+      throw new Error(t.detail || 'Datei konnte nicht gelesen werden');
+    }
+    S.mess = await r.json();
+    $('sysName').textContent = S.mess.systemname || S.mess.dateiname || 'Messdaten geladen';
+    $('dateiInfo').textContent =
+      `${S.mess.dateiname} – ${S.mess.zeit.length} Messpunkte`
+      + (S.mess.u_daten.length ? ', mit Stellgröße' : ', ohne Stellgröße');
+    auswerten();
+  } catch (e) {
+    $('dateiFehler').textContent = e.message;
+    $('dateiFehler').hidden = false;
+  } finally {
+    ev.target.value = '';           // dieselbe Datei erneut wählbar machen
+  }
+});
+
+// ══ Bedienung ═════════════════════════════════════════════════════════════
+for (const id of ['YA', 'YE', 'UA', 'UE', 't0', 't10', 't50', 't90']) {
+  $(id).addEventListener('input', auswertenVerzoegert);
+}
+for (const id of ['showM1', 'showOpt', 'showP1']) {
+  $(id).addEventListener('change', zeichnen);
+}
+
+$('segDarstellung').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button');
+  if (!b) return;
+  S.darstellung = parseInt(b.dataset.value, 10);
+  for (const btn of $('segDarstellung').querySelectorAll('button')) {
+    btn.setAttribute('aria-pressed', btn === b ? 'true' : 'false');
+  }
+  zeichnen();
+});
+
+function allesZuruecksetzen() {
+  S.mess = null;
+  S.erg = null;
+  const vorgaben = { YA: '0', YE: '1', UA: '0', UE: '1', t0: '0', t10: '', t50: '', t90: '' };
+  for (const [id, v] of Object.entries(vorgaben)) $(id).value = v;
+  $('sysName').textContent = 'Keine Messdaten geladen';
+  $('dateiInfo').textContent =
+    'Excel: Spalte 1 Zeit, Spalte 2 Ausgangsgröße y, Spalte 3 Stellgröße u (optional).';
+  $('dateiFehler').hidden = true;
+  auswerten();
+}
+
+// ══ Start ═════════════════════════════════════════════════════════════════
+(async function start() {
+  try {
+    const r = await fetch('/api/health');
+    statusSetzen(r.ok);
+  } catch { statusSetzen(false); }
+  signalwerteAnzeigen();
+  auswerten();
+})();
+
+window.addEventListener('resize', () => {
+  const div = $('plot');
+  if (div && div.data) Plotly.Plots.resize(div);
+});
+</script>
+</body>
+</html>

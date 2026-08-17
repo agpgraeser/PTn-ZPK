@@ -1,0 +1,356 @@
+/* ============================================================================
+   AGP·Control – Design System  v1.0
+   Gemeinsame Designsprache für die Regelungstechnik-Web-Apps
+   (PT1TT, PTkPTn, RegelkreisZustandsDemo, HdT-PI-Regelkreis, …)
+
+   Einbinden:   <link rel="stylesheet" href="agp-design-system.css">
+   Alle Klassen/Variablen sind mit  agp-  bzw.  --agp-  präfixiert, damit sie
+   nicht mit vorhandenem App-CSS oder MUI kollidieren.
+
+   Aufbau:  1) Tokens  2) App-Shell  3) Karten  4) Formulare/Felder
+            5) Segmented Control  6) Checkbox/Toggle  7) Buttons
+            8) Badges/Hinweise  9) Diagramm-Karten  10) Dark Mode
+   ========================================================================== */
+
+/* ── 1) Design-Tokens ─────────────────────────────────────────────────── */
+:root {
+  /* Markenfarben (aus dem Bestand der Apps abgeleitet) */
+  --agp-brand:        #3949ab;   /* Indigo – Primärfarbe, Buttons, aktive Zustände */
+  --agp-brand-strong: #283593;
+  --agp-brand-deep:   #1a237e;   /* Header-Verlauf, Überschriften */
+  --agp-brand-tint:   #e8eaf6;   /* helle Fläche, Sekundärbutton */
+  --agp-accent:       #00897b;   /* Teal – Messgrößen / Stellgröße / Datenspur */
+
+  /* Semantische Farben (getrennt vom Marken-Akzent) */
+  --agp-ok:      #2e7d32;
+  --agp-ok-bg:   #e8f5e9;
+  --agp-ok-brd:  #a5d6a7;
+  --agp-warn:    #8d6e00;
+  --agp-warn-bg: #fff8e1;
+  --agp-warn-brd:#ffe082;
+  --agp-err:     #c62828;
+  --agp-err-bg:  #ffebee;
+  --agp-err-brd: #ef9a9a;
+
+  /* Neutrale – leicht ins Indigo gezogen, damit sie „gewählt“ wirken */
+  --agp-bg:      #eef0f5;   /* Seitenhintergrund */
+  --agp-surface: #ffffff;   /* Karten, Panel */
+  --agp-surface-2:#f7f8fb;  /* eingebettete Fläche, Input-Hintergrund */
+  --agp-border:  #d5dae3;
+  --agp-border-strong:#c2c9d6;
+  --agp-ink:     #1e2330;   /* Haupttext */
+  --agp-ink-muted:#5c6675;  /* Labels, Sekundärtext */
+  --agp-ink-faint:#8a93a3;  /* Hinweise, Einheiten */
+
+  /* Radien / Schatten / Ringe */
+  --agp-r-sm: 6px;
+  --agp-r-md: 8px;
+  --agp-r-lg: 10px;
+  --agp-shadow-1: 0 1px 3px rgba(20,28,55,.08), 0 1px 2px rgba(20,28,55,.06);
+  --agp-shadow-2: 0 2px 8px rgba(20,28,55,.10);
+  --agp-ring: 0 0 0 3px rgba(57,73,171,.28);   /* Fokusring */
+
+  /* Typografie – ehrliche System-Stacks (keine externen Fonts, kein CDN) */
+  --agp-font: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --agp-mono: ui-monospace, "Cascadia Code", "Segoe UI Mono", Consolas, monospace;
+  --agp-fs-xs: 0.72rem;
+  --agp-fs-sm: 0.82rem;   /* Standard-UI-Größe der Apps */
+  --agp-fs-md: 0.9rem;
+  --agp-fs-lg: 1rem;
+  --agp-fs-xl: 1.25rem;
+
+  /* Abstände (4er-Raster) */
+  --agp-sp-1: 4px;
+  --agp-sp-2: 8px;
+  --agp-sp-3: 12px;
+  --agp-sp-4: 16px;
+  --agp-sp-5: 24px;
+
+  /* Kennzahlen der App-Shell */
+  --agp-panel-min: 300px;  /* Mindestbreite des Parameter-Panels (Schutz auf schmalen Screens) */
+  --agp-header-h: 56px;
+}
+
+/* ── 2) App-Shell: Header + Links/Rechts-Layout ───────────────────────── */
+.agp-app {
+  font-family: var(--agp-font);
+  color: var(--agp-ink);
+  background: var(--agp-bg);
+  min-height: 100vh;
+}
+
+.agp-header {
+  height: var(--agp-header-h);
+  background: linear-gradient(100deg, var(--agp-brand-deep), var(--agp-brand-strong));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: var(--agp-sp-3);
+  padding: 0 var(--agp-sp-4);
+  box-shadow: var(--agp-shadow-2);
+}
+/* Markenzeichen + Wortmarke (Wiedererkennung über alle Apps) */
+.agp-brand { display: flex; align-items: center; gap: 10px; }
+.agp-brand__mark { width: 30px; height: 30px; flex: 0 0 auto; display: block; }
+.agp-brand__word {
+  font-weight: 700; font-size: var(--agp-fs-md); letter-spacing: .02em; white-space: nowrap;
+}
+.agp-brand__word b { font-weight: 800; }
+.agp-header__sep { width: 1px; height: 26px; background: rgba(255,255,255,.28); }
+.agp-header__title { font-size: var(--agp-fs-md); font-weight: 600; }
+.agp-header__title small { display: block; font-size: var(--agp-fs-xs); opacity: .72; font-weight: 400; }
+.agp-header__spacer { margin-left: auto; }
+.agp-header__actions { display: flex; align-items: center; gap: var(--agp-sp-2); }
+
+/* Zwei-Spalten-Arbeitsfläche: 1/3 Parameter links, 2/3 Ausgabe rechts.
+   1fr:2fr ergibt exakt das bevorzugte Verhältnis; minmax schützt das Panel
+   auf schmalen Bildschirmen vor dem Zusammenquetschen. */
+.agp-workspace {
+  display: grid;
+  grid-template-columns: minmax(var(--agp-panel-min), 1fr) 2fr;
+  gap: var(--agp-sp-3);
+  padding: var(--agp-sp-3);
+  align-items: start;
+}
+.agp-panel { display: flex; flex-direction: column; gap: var(--agp-sp-3); }
+.agp-output { display: flex; flex-direction: column; gap: var(--agp-sp-3); min-width: 0; }
+
+@media (max-width: 860px) {
+  .agp-workspace { grid-template-columns: 1fr; }
+}
+
+/* ── 3) Karten ────────────────────────────────────────────────────────── */
+.agp-card {
+  background: var(--agp-surface);
+  border: 1px solid var(--agp-border);
+  border-radius: var(--agp-r-lg);
+  box-shadow: var(--agp-shadow-1);
+  padding: var(--agp-sp-3) var(--agp-sp-4) var(--agp-sp-4);
+}
+.agp-card__head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--agp-sp-2);
+  margin: 0 0 var(--agp-sp-3);
+  padding-bottom: var(--agp-sp-2);
+  border-bottom: 1px solid var(--agp-border);
+}
+.agp-card__title {
+  margin: 0;
+  font-size: var(--agp-fs-sm);
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--agp-brand-deep);
+  display: flex; align-items: center; gap: 8px;
+}
+/* dezenter farbiger Punkt statt Emoji – konsistent, druckbar */
+.agp-card__title::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--agp-accent); flex: 0 0 auto;
+}
+.agp-card__title.is-brand::before { background: var(--agp-brand); }
+
+/* ── 4) Formulare: kompaktes Label/Wert-Raster ────────────────────────── */
+/* Dichte wie in den kompakten Apps: Paare aus Label + schmalem Zahlenfeld. */
+.agp-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--agp-grid-cols, 2), max-content minmax(76px, 1fr));
+  column-gap: var(--agp-sp-2);
+  row-gap: var(--agp-sp-2);
+  align-items: center;
+}
+.agp-grid--1 { --agp-grid-cols: 1; }
+.agp-grid--2 { --agp-grid-cols: 2; }
+.agp-grid--3 { --agp-grid-cols: 3; }
+
+/* Volle Label/Wert-Zeile (breite Felder, Textfelder) */
+.agp-field { display: flex; align-items: center; justify-content: space-between; gap: var(--agp-sp-2); }
+
+.agp-label {
+  font-size: var(--agp-fs-sm);
+  font-weight: 500;
+  color: var(--agp-ink-muted);
+  white-space: nowrap;
+}
+.agp-label--help { cursor: help; border-bottom: 1px dotted var(--agp-border-strong); }
+
+.agp-input, .agp-select, .agp-textarea {
+  width: 100%;
+  min-width: 0;                /* darf im Grid/Flex schrumpfen */
+  max-width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: var(--agp-fs-sm);
+  color: var(--agp-ink);
+  background: var(--agp-surface-2);
+  border: 1px solid var(--agp-border);
+  border-radius: var(--agp-r-sm);
+  padding: 5px 8px;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.agp-input { text-align: right; font-variant-numeric: tabular-nums; }
+.agp-input--text { text-align: left; font-variant-numeric: normal; }   /* für Namen, Vektoren usw. */
+.agp-textarea { text-align: left; font-family: var(--agp-mono); resize: vertical; min-height: 54px; }
+.agp-input:focus, .agp-select:focus, .agp-textarea:focus {
+  outline: none;
+  border-color: var(--agp-brand);
+  background: var(--agp-surface);
+  box-shadow: var(--agp-ring);
+}
+.agp-input:disabled, .agp-select:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Berechnetes / schreibgeschütztes Feld – grün (Bestandskonvention der Apps) */
+.agp-input--readonly {
+  background: var(--agp-ok-bg);
+  border-color: var(--agp-ok-brd);
+  color: var(--agp-ok);
+  font-weight: 600;
+}
+/* Fehlerhafter Wert */
+.agp-input--error { border-color: var(--agp-err); background: var(--agp-err-bg); }
+
+.agp-hint { font-size: var(--agp-fs-xs); color: var(--agp-ink-faint); margin-top: -2px; }
+.agp-unit { font-size: var(--agp-fs-xs); color: var(--agp-ink-faint); }
+
+/* ── 5) Segmented Control ─────────────────────────────────────────────── */
+/* EIN Muster für „zwischen Darstellungen wählen“ – ersetzt die bisher
+   uneinheitlichen ToggleButtonGroup (PT1TT) und <select> (Regelkreis). */
+.agp-segmented {
+  display: inline-flex;
+  background: var(--agp-surface-2);
+  border: 1px solid var(--agp-border);
+  border-radius: var(--agp-r-md);
+  padding: 2px;
+  gap: 2px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.agp-segmented button {
+  appearance: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: var(--agp-fs-sm); font-weight: 600; white-space: nowrap;
+  color: var(--agp-ink-muted);
+  background: transparent;
+  padding: 5px 12px;
+  border-radius: 6px;
+  transition: background .15s, color .15s, box-shadow .15s;
+}
+.agp-segmented button:hover:not([aria-pressed="true"]) { color: var(--agp-ink); }
+.agp-segmented button[aria-pressed="true"] {
+  background: var(--agp-brand);
+  color: #fff;
+  box-shadow: var(--agp-shadow-1);
+}
+.agp-segmented button:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── 6) Checkbox / Toggle-Zeile ───────────────────────────────────────── */
+.agp-check {
+  display: flex; align-items: center; gap: var(--agp-sp-2);
+  font-size: var(--agp-fs-sm); color: var(--agp-ink-muted); cursor: pointer;
+}
+.agp-check input[type="checkbox"] {
+  width: 17px; height: 17px; accent-color: var(--agp-brand); cursor: pointer; flex: 0 0 auto;
+}
+.agp-check--switch input[type="checkbox"] { width: 34px; height: 18px; }  /* optionaler Schalter-Look via accent */
+
+/* ── 7) Buttons ───────────────────────────────────────────────────────── */
+.agp-btn {
+  appearance: none; cursor: pointer; font-family: inherit;
+  font-size: var(--agp-fs-sm); font-weight: 600; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--agp-r-md);
+  border: 1px solid transparent;
+  transition: background .15s, border-color .15s, opacity .15s, transform .05s;
+}
+.agp-btn:active { transform: translateY(1px); }
+.agp-btn:focus-visible { outline: none; box-shadow: var(--agp-ring); }
+.agp-btn:disabled { opacity: .45; cursor: not-allowed; }
+.agp-btn--primary   { background: var(--agp-brand); color: #fff; }
+.agp-btn--primary:hover:not(:disabled)   { background: var(--agp-brand-strong); }
+.agp-btn--secondary { background: var(--agp-brand-tint); color: var(--agp-brand-strong); }
+.agp-btn--secondary:hover:not(:disabled) { background: #d5d9f0; }
+.agp-btn--ghost     { background: transparent; border-color: var(--agp-border-strong); color: var(--agp-ink-muted); }
+.agp-btn--ghost:hover:not(:disabled)     { border-color: var(--agp-brand); color: var(--agp-brand); }
+.agp-btn--success   { background: var(--agp-ok); color: #fff; }
+.agp-btn--success:hover:not(:disabled)   { filter: brightness(1.06); }
+.agp-btn--sm { padding: 5px 10px; font-size: var(--agp-fs-xs); }
+.agp-btn--block { width: 100%; }
+/* Button im Header (auf dem Verlauf) */
+.agp-header .agp-btn--ghost { border-color: rgba(255,255,255,.5); color: #fff; }
+.agp-header .agp-btn--ghost:hover { background: rgba(255,255,255,.14); color: #fff; }
+
+/* ── 8) Badges / Meldungen ────────────────────────────────────────────── */
+.agp-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--agp-fs-xs); font-weight: 600;
+  padding: 3px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.16); color: #fff;
+}
+.agp-badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.agp-badge.is-ok   { background: rgba(46,125,50,.22);  color: #b9f6ca; }
+.agp-badge.is-err  { background: rgba(198,40,40,.24);  color: #ffcdd2; }
+
+/* Inline-Kennwert-Chip (z. B. „YSQ: 0,0421“) */
+.agp-chip {
+  font-size: var(--agp-fs-xs); color: var(--agp-ink-muted);
+  font-variant-numeric: tabular-nums;
+  background: var(--agp-surface-2); border: 1px solid var(--agp-border);
+  border-radius: 999px; padding: 2px 8px;
+}
+
+.agp-msg { border-radius: var(--agp-r-md); padding: 9px 12px; font-size: var(--agp-fs-sm); }
+.agp-msg--ok   { background: var(--agp-ok-bg);   border: 1px solid var(--agp-ok-brd);   color: var(--agp-ok); }
+.agp-msg--warn { background: var(--agp-warn-bg); border: 1px solid var(--agp-warn-brd); color: var(--agp-warn); }
+.agp-msg--err  { background: var(--agp-err-bg);  border: 1px solid var(--agp-err-brd);  color: var(--agp-err); }
+
+/* ── 9) Diagramm-Karte ────────────────────────────────────────────────── */
+.agp-chart-card { padding-bottom: var(--agp-sp-2); }
+.agp-chart-card .agp-card__head { border-bottom: none; margin-bottom: var(--agp-sp-1); }
+.agp-chart { width: 100%; min-height: 220px; }
+
+/* Datenreihen-Farben für Plotly & Co. (als Referenz):
+   Regelgröße/Ausgang  var(--agp-brand)   #3949ab
+   Sollwert/Führung    #9e9e9e (gestrichelt)
+   Stellgröße          var(--agp-accent)  #00897b
+   Regelabweichung     var(--agp-err)     #c62828
+   Zustände x_i        #8e24aa #fb8c00 #00acc1 #7cb342 #5d4037 … */
+
+/* ── 10) Dark Mode ────────────────────────────────────────────────────── */
+/* Token-Ebene umdefinieren; Komponenten oben nutzen nur Tokens. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --agp-brand:        #7c8cff;
+    --agp-brand-strong: #6675e6;
+    --agp-brand-deep:   #aab4ff;
+    --agp-brand-tint:   #262c40;
+    --agp-accent:       #4dd0c4;
+    --agp-ok: #81c784; --agp-ok-bg: #17301c; --agp-ok-brd: #2e5a34;
+    --agp-warn: #ffcf6b; --agp-warn-bg: #33290b; --agp-warn-brd: #6b5615;
+    --agp-err: #ef9a9a; --agp-err-bg: #331314; --agp-err-brd: #6b2b2d;
+    --agp-bg: #12151d; --agp-surface: #1b2029; --agp-surface-2: #232a35;
+    --agp-border: #2b3240; --agp-border-strong: #3a4353;
+    --agp-ink: #e6e9f0; --agp-ink-muted: #a4adbd; --agp-ink-faint: #7a8494;
+    --agp-shadow-1: 0 1px 3px rgba(0,0,0,.4);
+    --agp-shadow-2: 0 2px 10px rgba(0,0,0,.5);
+    --agp-ring: 0 0 0 3px rgba(124,140,255,.35);
+  }
+  .agp-header { background: linear-gradient(100deg, #1a2033, #232b45); }
+}
+/* Explizite Umschaltung durch den Nutzer gewinnt in beide Richtungen */
+:root[data-theme="light"] {
+  --agp-brand: #3949ab; --agp-brand-strong:#283593; --agp-brand-deep:#1a237e;
+  --agp-brand-tint:#e8eaf6; --agp-accent:#00897b;
+  --agp-bg:#eef0f5; --agp-surface:#fff; --agp-surface-2:#f7f8fb;
+  --agp-border:#d5dae3; --agp-border-strong:#c2c9d6;
+  --agp-ink:#1e2330; --agp-ink-muted:#5c6675; --agp-ink-faint:#8a93a3;
+}
+:root[data-theme="dark"] {
+  --agp-brand:#7c8cff; --agp-brand-strong:#6675e6; --agp-brand-deep:#aab4ff;
+  --agp-brand-tint:#262c40; --agp-accent:#4dd0c4;
+  --agp-bg:#12151d; --agp-surface:#1b2029; --agp-surface-2:#232a35;
+  --agp-border:#2b3240; --agp-border-strong:#3a4353;
+  --agp-ink:#e6e9f0; --agp-ink-muted:#a4adbd; --agp-ink-faint:#7a8494;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

@@ -1,0 +1,12 @@
+# Render-Deploy-Konfiguration – PTn-ZPK (FastAPI)
+# Ein Web Service (Python). Nach dem Verbinden deployt Render automatisch bei 'git push'.
+# Render setzt $PORT selbst; uvicorn muss auf 0.0.0.0:$PORT binden.
+
+services:
+  - type: web
+    name: ptn-zpk
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn server:app --host 0.0.0.0 --port $PORT"
+    autoDeploy: true
