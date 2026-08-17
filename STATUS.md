@@ -46,7 +46,10 @@ die Zeitkonstante T (auf 1 % genau) zurück.
       Gegengeprüft in einem frischen venv: Installation von GitHub liefert
       `zpk_auswertung`, Probe PT4 ergibt n = 4, T = 1,9995.
       `pip install -r requirements.txt` funktioniert damit, Render kann bauen.
-- [ ] Eigenes GitHub-Repo für `PTn-ZPK` anlegen und Erstcommit pushen
+- [x] GitHub-Repo angelegt und gepusht:
+      https://github.com/agpgraeser/PTn-ZPK – öffentlich, Branch `main`
+      (wie `agp_control_kern`). Vor der Veröffentlichung auf Zugangsdaten
+      geprüft, keine gefunden.
 - [ ] Render-Deployment einrichten (`render.yaml` liegt bereit)
 - [ ] AGP-Projektdatei in der Oberfläche anbinden (Server-Routen existieren)
 - [ ] Vergleich alte ./. neue App mit denselben Messdaten durch den Nutzer
