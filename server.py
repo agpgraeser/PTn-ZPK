@@ -20,12 +20,16 @@ from pydantic import BaseModel
 from agp_control_kern import projektdatei, ptn_zpk
 
 import excel_io
+from webauth import schutz_aktivieren
 
 XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 BASE = Path(__file__).resolve().parent
 
 app = FastAPI(title="AGP-Control - PTn-Parameter (ZPK)", version="1.0")
+
+# Zugriffsschutz: greift nur, wenn AGP_PASSWORT gesetzt ist (siehe webauth.py).
+schutz_aktivieren(app)
 
 
 @app.middleware("http")
