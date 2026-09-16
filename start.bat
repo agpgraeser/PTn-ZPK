@@ -30,6 +30,12 @@ if not exist "venv\" (
     call venv\Scripts\activate.bat
 )
 
+rem Automatisierungsgrad der Parameterbestimmung (Trainer-Vorgabe):
+rem   a = manuell  b = teilautomatisch (Vorgabe)  c = vollautomatisch
+rem Zum Umstellen die naechste Zeile einschalten und den Buchstaben setzen.
+rem set AGP_AUTOMATIK=c
+rem Im laufenden Betrieb geht auch: http://localhost:8010/?modus=c
+
 echo.
 echo Server startet auf http://localhost:8010
 echo Beenden: Strg+C

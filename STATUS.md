@@ -4,6 +4,71 @@ Lebendes Logbuch. Neueste Einträge oben.
 
 ---
 
+## 2026-09-16 – Automatisierungsgrad a/b/c (Trainer-Vorgabe)
+
+**Was getan**
+
+- Der Kursleiter kann jetzt vorgeben, wie viel die App bei der
+  Parameterbestimmung abnimmt: **a** manuell, **b** teilautomatisch (bisheriger
+  Stand, bleibt Vorgabe), **c** vollautomatisch. Messdaten laden geht in allen
+  Fällen. Der Grad steht als Badge in der Kopfzeile zwischen „PTn-Parameter
+  Tool" und „Berechnungen überprüfen".
+- Einstellung zweistufig: `AGP_AUTOMATIK=a|b|c` als Grundwert (Render
+  *Environment* / `start.bat`), `?modus=a|b|c` überschreibt zur Laufzeit –
+  damit im Kurs die Steigerung a → b → c möglich ist, ohne den Dienst neu zu
+  starten. Unbekannte Werte fallen auf `b`.
+- Neu: `autoerfassung.py` (Ablesen aus der Messung), `/api/modus`,
+  `/api/autoerfassung`, `modusAnwenden()` + `autoErfassen()` in `index.html`,
+  Knopf „Werte neu erfassen", Badge in `static/app.css`.
+- In **a** sind Y10/Y50/Y90 freie Felder, und die grünen Ablesehilfslinien
+  folgen dem **eingegebenen** Wert – ein Rechenfehler wird im Diagramm sichtbar
+  (so vom Nutzer gewünscht; das Programm meldet dazu nichts).
+
+**Zwei Befunde, die den Entwurf geändert haben**
+
+1. **Ohne Stellgrößenspalte ist t₀ nicht bestimmbar** – und t₀ geht direkt in
+   die ZPK-Rechnung ein. Eine träge Strecke läuft nach dem Sprung fast
+   waagerecht los, jede Schätzung aus y allein liegt zu spät. Gemessen an
+   exakten Sprungantworten (T = 2): aus PT5 wird PT1 (T = 6,8), aus PT8 wird
+   PT2 (T = 4,4). Deshalb bleibt t₀ dann **offen** wie UA/UE, mit Hinweis und
+   Schätzwert als Anhaltspunkt. Ursprünglich war „alles außer UA/UE
+   automatisch" verabredet – der Messwert hat das widerlegt.
+2. **Nicht bestimmbare Felder müssen geleert werden.** Beim ersten Entwurf
+   blieben sie stehen; die App rechnete dann mit dem Vorgabewert t₀ = 0 weiter
+   und zeigte stillschweigend n = 6 statt 4. Im Browser genau so beobachtet.
+
+**Nebenbefund (betrifft alle Apps der Familie)**
+
+`.agp-btn { display: inline-flex }` im Design-System **überstimmt das Attribut
+`hidden`** – ein per JS ausgeblendeter Knopf bleibt sichtbar. Hier mit
+`[hidden] { display: none !important; }` in `static/app.css` behoben; gehört in
+den Master unter `_AGP-DesignSystem\`.
+
+**Tests**
+
+| Suite | Ergebnis |
+|---|---|
+| `test_server.py` + `test_webauth.py` (28) | ✅ grün – davon 8 neu für Modus und Auto-Erfassung |
+
+Geprüft wird unter anderem, dass die erfassten Werte die Ordnung und
+Zeitkonstante **zurückgeben** (PT4, T = 3 → n = 4, T = 3,01), dass ein
+verrauschtes Signal YA/YE nicht verschiebt und dass fallende Sprünge
+funktionieren.
+
+**Im Browser nachgeprüft** (alle drei Grade, PT4 mit T = 3, t₀ = 2):
+a → Felder frei und leer, Hilfslinie folgt einem falsch eingegebenen Y50;
+b → unverändert gesperrt und gerechnet;
+c → alle Felder gefüllt, n = 4, T = 3,01, kS = 2,5, Werte änderbar.
+
+**Offene Punkte**
+
+- [ ] `[hidden]`-Korrektur in den Design-System-Master übernehmen
+- [ ] Auto-Erfassung nach `agp_control_kern` heben, wenn sie sich bewährt hat
+- [ ] Entscheiden, welcher Grad im Kurs die Render-Vorgabe wird
+      (`AGP_AUTOMATIK` beim Dienst `ptn-zpk` setzen)
+
+---
+
 ## 2026-08-17 – Projekt angelegt (Portierung aus React)
 
 **Was getan**

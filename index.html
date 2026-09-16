@@ -24,6 +24,7 @@
   </div>
   <div class="agp-header__sep"></div>
   <div class="agp-header__title">PTn-Parameter Tool</div>
+  <span class="modus-anzeige" id="modusAnzeige" title="Vom Trainer vorgegebener Automatisierungsgrad">–</span>
   <button class="agp-btn agp-btn--ghost agp-btn--sm" onclick="pruefseiteZeigen()"
           title="Alle Zwischenergebnisse der ZPK-Rechnung nachvollziehen">Berechnungen überprüfen …</button>
   <button class="agp-btn agp-btn--ghost agp-btn--sm" onclick="allesZuruecksetzen()"
@@ -70,11 +71,13 @@
         <h3 class="agp-card__title is-brand">Eingaben Zeit-Prozent-Kennwert-Methode</h3>
       </div>
       <div class="row4">
-        <label for="Y10">Y10</label><input class="agp-input" id="Y10" readonly />
+        <!-- Y10/Y50/Y90: in Grad b berechnet und gesperrt, in a und c editierbar
+             (readonly setzt modusAnwenden(), nicht das Markup). -->
+        <label for="Y10">Y10</label><input class="agp-input" type="number" id="Y10" step="0.01" />
         <label for="t10">t10</label><input class="agp-input" type="number" id="t10" step="0.01" />
-        <label for="Y50">Y50</label><input class="agp-input" id="Y50" readonly />
+        <label for="Y50">Y50</label><input class="agp-input" type="number" id="Y50" step="0.01" />
         <label for="t50">t50</label><input class="agp-input" type="number" id="t50" step="0.01" />
-        <label for="Y90">Y90</label><input class="agp-input" id="Y90" readonly />
+        <label for="Y90">Y90</label><input class="agp-input" type="number" id="Y90" step="0.01" />
         <label for="t90">t90</label><input class="agp-input" type="number" id="t90" step="0.01" />
       </div>
       <div class="agp-msg agp-msg--warn" id="zeitMsg" hidden>
@@ -123,8 +126,14 @@
       <button class="agp-btn agp-btn--secondary agp-btn--block" onclick="dateiInput.click()">
         Datei laden
       </button>
+      <button class="agp-btn agp-btn--ghost agp-btn--block" id="btnNeuErfassen"
+              onclick="autoErfassen()" hidden
+              title="Alle Werte erneut aus den geladenen Messdaten ablesen">
+        Werte neu erfassen
+      </button>
       <div class="agp-hint" id="dateiInfo">Excel: Spalte 1 Zeit, Spalte 2 Ausgangsgröße y, Spalte 3 Stellgröße u (optional).</div>
       <div class="agp-msg agp-msg--err" id="dateiFehler" hidden></div>
+      <div class="agp-msg agp-msg--warn" id="erfassungHinweis" hidden></div>
     </div>
 
   </aside>
@@ -154,7 +163,37 @@ const S = {
   mess: null,          // {zeit, y_daten, u_daten, var_namen, dateiname, systemname}
   erg: null,           // Antwort von /api/auswertung
   darstellung: 1,
+  modus: 'b',          // Automatisierungsgrad a|b|c (siehe modusAnwenden)
 };
+
+// ══ Automatisierungsgrad ══════════════════════════════════════════════════
+// a = manuell · b = teilautomatisch (bisher) · c = vollautomatisch.
+// Grundwert kommt vom Server (AGP_AUTOMATIK), ?modus=… überschreibt ihn.
+const MODUS_TEXT = {
+  a: { kurz: 'Manuell',         lang: 'Manuell – alle Werte selbst ermitteln und eintragen' },
+  b: { kurz: 'Teilautomatisch', lang: 'Teilautomatisch – Y10/Y50/Y90 werden berechnet, Zeiten selbst ablesen' },
+  c: { kurz: 'Vollautomatisch', lang: 'Vollautomatisch – alle Werte werden aus den Messdaten abgelesen und können geändert werden' },
+};
+
+/** Felder, die der Grad steuert: in b gesperrt und gerechnet, sonst frei. */
+const Y_FELDER = ['Y10', 'Y50', 'Y90'];
+
+function modusAnwenden() {
+  const t = MODUS_TEXT[S.modus] || MODUS_TEXT.b;
+  const a = $('modusAnzeige');
+  a.textContent = t.kurz;
+  a.title = t.lang;
+  a.dataset.modus = S.modus;
+
+  // Y10/Y50/Y90 nur im teilautomatischen Grad vom Programm ausfüllen.
+  const gesperrt = (S.modus === 'b');
+  for (const id of Y_FELDER) {
+    $(id).readOnly = gesperrt;
+    $(id).classList.toggle('is-gerechnet', gesperrt);
+  }
+  // Der Knopf zum erneuten Ablesen ergibt nur mit Messdaten und nur in c Sinn.
+  $('btnNeuErfassen').hidden = !(S.modus === 'c' && S.mess);
+}
 
 const $ = (id) => document.getElementById(id);
 const zahl = (id) => { const v = parseFloat($(id).value); return isFinite(v) ? v : null; };
@@ -175,11 +214,29 @@ function signalwerteAnzeigen() {
   $('DY').value = fmt(DY, 2);
   $('DU').value = fmt(DU, 2);
   $('kS').value = fmt(kS, 4);
-  // Y10/Y50/Y90 sind die Amplituden, zu denen t10/t50/t90 abgelesen werden
+  // Y10/Y50/Y90 sind die Amplituden, zu denen t10/t50/t90 abgelesen werden.
+  // Nur der teilautomatische Grad trägt sie ein; in a ermittelt sie der
+  // Teilnehmer selbst, in c kommen sie einmalig aus der Auto-Erfassung und
+  // dürfen danach von Hand geändert werden.
+  if (S.modus !== 'b') return;
   const anteil = (p) => (YA !== null && DY !== null) ? YA + p * DY : null;
   $('Y10').value = fmt(anteil(0.10), 2);
   $('Y50').value = fmt(anteil(0.50), 2);
   $('Y90').value = fmt(anteil(0.90), 2);
+}
+
+/**
+ * Höhen, auf denen die grünen Ablesehilfslinien liegen.
+ * In b die gerechneten Werte (ungerundet, wie bisher); in a und c die vom
+ * Teilnehmer eingetragenen – dadurch wird ein Ablesefehler im Diagramm sichtbar.
+ */
+function ablesehoehen() {
+  const { YA, DY } = signalwerte();
+  if (S.modus === 'b') {
+    if (YA === null || DY === null) return { t10: null, t50: null, t90: null };
+    return { t10: YA + 0.10 * DY, t50: YA + 0.50 * DY, t90: YA + 0.90 * DY };
+  }
+  return { t10: zahl('Y10'), t50: zahl('Y50'), t90: zahl('Y90') };
 }
 
 // ══ Server ════════════════════════════════════════════════════════════════
@@ -339,7 +396,7 @@ function zeichnen() {
 
   // — Hilfslinien: jede mit eigener Gültigkeitsprüfung, denn eine einzige
   //   NaN-Koordinate deaktiviert in Plotly den gesamten Hover-Layer —
-  const { YA, YE, DY } = signalwerte();
+  const { YA, YE } = signalwerte();
   const t0 = zahl('t0'), t10 = zahl('t10'), t50 = zahl('t50'), t90 = zahl('t90');
   const tMin = Math.min(...t), tMax = Math.max(...t);
   const shapes = [], annots = [];
@@ -355,9 +412,10 @@ function zeichnen() {
       annots.push({ x: t0, y: YA, xref: 'x', yref: 'y', text: 't₀',
                     showarrow: false, yshift: -18, font: { size: 12, color: 'orange' } });
     }
-    for (const [tw, p, bez] of [[t10, 0.10, 't10'], [t50, 0.50, 't50'], [t90, 0.90, 't90']]) {
-      if (tw === null || DY === null) continue;
-      const yw = YA + p * DY;
+    const hoehen = ablesehoehen();
+    for (const [tw, bez] of [[t10, 't10'], [t50, 't50'], [t90, 't90']]) {
+      const yw = hoehen[bez];
+      if (tw === null || yw === null || !isFinite(yw)) continue;
       shapes.push({ type: 'line', x0: tMin, x1: tw, y0: yw, y1: yw,
                     xref: 'x', yref: 'y', line: { color: 'green', width: 1, dash: 'dash' } });
       shapes.push({ type: 'line', x0: tw, x1: tw, y0: YA, y1: yw,
@@ -535,7 +593,9 @@ $('dateiInput').addEventListener('change', async (ev) => {
     $('dateiInfo').textContent =
       `${S.mess.dateiname} – ${S.mess.zeit.length} Messpunkte`
       + (S.mess.u_daten.length ? ', mit Stellgröße' : ', ohne Stellgröße');
-    auswerten();
+    $('btnNeuErfassen').hidden = (S.modus !== 'c');
+    if (S.modus === 'c') await autoErfassen();
+    else auswerten();
   } catch (e) {
     $('dateiFehler').textContent = e.message;
     $('dateiFehler').hidden = false;
@@ -544,8 +604,56 @@ $('dateiInput').addEventListener('change', async (ev) => {
   }
 });
 
+// ══ Auto-Erfassung (Grad c) ═══════════════════════════════════════════════
+/**
+ * Liest alle Eingabewerte aus den geladenen Messdaten ab und trägt sie ein.
+ * UA/UE bleiben stehen, wenn die Datei keine Stellgröße enthält – sie sind
+ * dann nicht bestimmbar und müssen von Hand kommen (Hinweis vom Server).
+ */
+async function autoErfassen() {
+  if (!S.mess) return;
+  const h = $('erfassungHinweis');
+  h.hidden = true;
+  try {
+    const r = await fetch('/api/autoerfassung', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        zeit: S.mess.zeit,
+        y_daten: S.mess.y_daten,
+        u_daten: S.mess.u_daten && S.mess.u_daten.length ? S.mess.u_daten : null,
+      }),
+    });
+    const antwort = await r.json();
+    if (!r.ok) throw new Error(antwort.detail || 'Erfassung fehlgeschlagen');
+
+    const felder = {
+      YA: antwort.ya, YE: antwort.ye, UA: antwort.ua, UE: antwort.ue,
+      t0: antwort.t0,
+      Y10: antwort.y10, Y50: antwort.y50, Y90: antwort.y90,
+      t10: antwort.t10, t50: antwort.t50, t90: antwort.t90,
+    };
+    for (const [id, wert] of Object.entries(felder)) {
+      // Nicht bestimmbare Größen werden GELEERT, nicht stehen gelassen: sonst
+      // rechnet die App mit einem Alt- oder Vorgabewert weiter (t₀ = 0) und
+      // liefert stillschweigend eine falsche Ordnung. Ein leeres Feld stoppt
+      // die Auswertung und zwingt zum Ablesen.
+      $(id).value = (wert === null || wert === undefined) ? '' : fmt(wert, 4);
+    }
+    if (antwort.hinweise && antwort.hinweise.length) {
+      h.textContent = antwort.hinweise.join(' ');
+      h.hidden = false;
+    }
+  } catch (e) {
+    h.textContent = 'Automatische Erfassung nicht möglich: ' + e.message
+                  + ' Die Werte bitte von Hand eintragen.';
+    h.hidden = false;
+  }
+  auswerten();
+}
+
 // ══ Bedienung ═════════════════════════════════════════════════════════════
-for (const id of ['YA', 'YE', 'UA', 'UE', 't0', 't10', 't50', 't90']) {
+for (const id of ['YA', 'YE', 'UA', 'UE', 't0', 't10', 't50', 't90', ...Y_FELDER]) {
   $(id).addEventListener('input', auswertenVerzoegert);
 }
 for (const id of ['showM1', 'showOpt', 'showP1']) {
@@ -567,10 +675,15 @@ function allesZuruecksetzen() {
   S.erg = null;
   const vorgaben = { YA: '0', YE: '1', UA: '0', UE: '1', t0: '0', t10: '', t50: '', t90: '' };
   for (const [id, v] of Object.entries(vorgaben)) $(id).value = v;
+  // In a und c bleiben die Y-Felder sonst mit alten Werten stehen; in b füllt
+  // signalwerteAnzeigen() sie gleich wieder.
+  for (const id of Y_FELDER) $(id).value = '';
   $('sysName').textContent = 'Keine Messdaten geladen';
   $('dateiInfo').textContent =
     'Excel: Spalte 1 Zeit, Spalte 2 Ausgangsgröße y, Spalte 3 Stellgröße u (optional).';
   $('dateiFehler').hidden = true;
+  $('erfassungHinweis').hidden = true;
+  $('btnNeuErfassen').hidden = true;
   auswerten();
 }
 
@@ -580,6 +693,16 @@ function allesZuruecksetzen() {
     const r = await fetch('/api/health');
     statusSetzen(r.ok);
   } catch { statusSetzen(false); }
+
+  // Automatisierungsgrad: Grundwert vom Server, ?modus=… hat Vorrang.
+  try {
+    const r = await fetch('/api/modus');
+    if (r.ok) S.modus = (await r.json()).modus || 'b';
+  } catch { /* Server offline: Grundwert b */ }
+  const ausUrl = (new URLSearchParams(location.search).get('modus') || '').toLowerCase();
+  if (['a', 'b', 'c'].includes(ausUrl)) S.modus = ausUrl;
+  modusAnwenden();
+
   try {
     const r = await fetch('/api/konstanten');
     if (r.ok) konstanten = await r.json();

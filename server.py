@@ -10,6 +10,7 @@ Start: python -m uvicorn server:app --port 8010   (oder start.bat)
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, UploadFile
@@ -19,12 +20,30 @@ from pydantic import BaseModel
 
 from agp_control_kern import projektdatei, ptn_zpk
 
+import autoerfassung
 import excel_io
 from webauth import schutz_aktivieren
 
 XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 BASE = Path(__file__).resolve().parent
+
+# ─── Automatisierungsgrad der Parameterbestimmung ────────────────────────────
+# Der Trainer legt fest, wie viel die App dem Teilnehmer abnimmt:
+#   a = manuell          alle Werte selbst ermitteln und eintragen
+#   b = teilautomatisch   Y10/Y50/Y90 werden gerechnet (bisheriges Verhalten)
+#   c = vollautomatisch   alle Werte werden aus den Messdaten abgelesen
+# Grundwert ueber die Umgebungsvariable AGP_AUTOMATIK (Render: je Dienst unter
+# *Environment*; lokal in start.bat). Im Kurs laesst er sich zusaetzlich per
+# URL-Parameter ?modus=a|b|c ueberschreiben - das macht das Frontend.
+MODI = ("a", "b", "c")
+MODUS_VORGABE = "b"
+
+
+def modus_lesen() -> str:
+    """Grundeinstellung aus der Umgebung; unbekannte Werte fallen auf b."""
+    wert = os.environ.get("AGP_AUTOMATIK", MODUS_VORGABE).strip().lower()
+    return wert if wert in MODI else MODUS_VORGABE
 
 app = FastAPI(title="AGP-Control - PTn-Parameter (ZPK)", version="1.0")
 
@@ -57,6 +76,13 @@ class AuswertungRequest(BaseModel):
     y_a: float | None = None
     zeit_daten: list[float] | None = None
     mess_daten: list[float] | None = None
+
+
+class AutoerfassungRequest(BaseModel):
+    """Messreihe, aus der die Eingabewerte abgelesen werden sollen."""
+    zeit: list[float]
+    y_daten: list[float]
+    u_daten: list[float] | None = None
 
 
 class ProjektSpeichernRequest(BaseModel):
@@ -95,6 +121,21 @@ def konstanten():
         "alpha": ptn_zpk.ALPHA,
         "alpha_inv": ptn_zpk.ALPHA_INV,
     }
+
+
+@app.get("/api/modus")
+def modus():
+    """Vom Trainer vorgegebener Automatisierungsgrad (Grundwert)."""
+    return {"modus": modus_lesen()}
+
+
+@app.post("/api/autoerfassung")
+def autoerfassen(req: AutoerfassungRequest):
+    """Liest YA/YE/UA/UE, t0, die Ablesehoehen und t10/t50/t90 aus der Messung."""
+    try:
+        return autoerfassung.erfassen(req.zeit, req.y_daten, req.u_daten)
+    except autoerfassung.ErfassungError as ex:
+        raise HTTPException(status_code=400, detail=str(ex))
 
 
 @app.post("/api/messdaten")

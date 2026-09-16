@@ -68,8 +68,64 @@ keine Shapes mit NaN-Koordinaten (jede Hilfslinie hat eine eigene
 Gültigkeitsprüfung – eine einzige NaN-Koordinate deaktiviert in Plotly den
 gesamten Hover-Layer), keine leeren Traces.
 
+## Automatisierungsgrad (Trainer-Vorgabe, 2026-09-16)
+Der Kursleiter legt fest, wie viel die App dem Teilnehmer bei der
+Parameterbestimmung abnimmt. Messdaten laden kann der Teilnehmer in **allen**
+Fällen; der gewählte Grad steht in der Kopfzeile zwischen „PTn-Parameter Tool"
+und „Berechnungen überprüfen".
+
+| Grad | Anzeige | YA/YE/UA/UE, t₀ | Y10/Y50/Y90 | t10/t50/t90 |
+|---|---|---|---|---|
+| **a** | Manuell | von Hand | **von Hand** | von Hand |
+| **b** | Teilautomatisch | von Hand | berechnet, gesperrt | von Hand |
+| **c** | Vollautomatisch | abgelesen | abgelesen | abgelesen |
+
+Grad **b** ist der Stand vor dieser Erweiterung und bleibt die Vorgabe.
+In **c** sind alle Werte änderbar – die Erfassung ist ein Vorschlag.
+
+**Einstellung:** Grundwert über die Umgebungsvariable `AGP_AUTOMATIK=a|b|c`
+(Render: je Dienst unter *Environment*; lokal in `start.bat`), zur Laufzeit
+überschreibbar per URL-Parameter `?modus=a|b|c`. Unbekannte Werte fallen auf
+`b` zurück. Der URL-Parameter ist Absicht (Steigerung a → b → c im Kurs), er
+ist **keine Sperre** – ein Teilnehmer kann ihn selbst setzen.
+
+**Wo:** `modus_lesen()` und `/api/modus` in `server.py`, `modusAnwenden()` in
+`index.html`, Badge `.modus-anzeige` in `static/app.css`.
+
+### Auto-Erfassung (`autoerfassung.py`)
+Liegt bewusst **in dieser App**, nicht im Kern – sie hängt am Messdatenformat
+(`excel_io.py` liegt aus demselben Grund lokal). Verfahren:
+- YA/YE als **Median** eines 5-%-Randbereichs (robust gegen Rauschen)
+- t₀, UA, UE aus dem Sprung der **Stellgröße**
+- t10/t50/t90 durch **lineare Interpolation** zwischen den Nachbarpunkten
+- fallende Sprünge (ΔY < 0) sind mitbehandelt
+
+**⚠️ Ohne Stellgrößenspalte bleibt t₀ offen.** Eine träge Strecke läuft nach
+dem Sprung fast waagerecht los; jede Schätzung aus y allein liegt zu spät, und
+t₀ geht direkt in die Rechnung ein. Gemessen (T = 2, exakte Sprungantworten):
+
+| n soll | n mit u | n ohne u | T ohne u |
+|---|---|---|---|
+| 2 | 2 | 1 | 2,31 |
+| 5 | 5 | **1** | 6,82 |
+| 8 | 8 | **2** | 4,42 |
+
+Deshalb werden UA, UE **und t₀** dann nicht eingetragen, sondern als Hinweis
+gemeldet (der Schätzwert steht im Text als Anhaltspunkt). **Nicht bestimmbare
+Felder werden geleert**, nicht mit dem Altwert stehen gelassen – sonst rechnet
+die App stillschweigend mit dem Vorgabewert t₀ = 0 weiter und liefert eine
+falsche Ordnung (im Browser genau so beobachtet).
+
+### Fallstrick Design-System
+`.agp-btn { display: inline-flex }` **überstimmt das Attribut `hidden`** – ein
+per JS ausgeblendeter Knopf bleibt sichtbar. Behoben mit
+`[hidden] { display: none !important; }` in `static/app.css`; gehört
+mittelfristig in den Master unter `_AGP-DesignSystem\`.
+
 ## Offene Punkte
 - AGP-Projektdatei: Lesen/Schreiben ist im Server angelegt
   (`/api/projekt_parse`, `/api/projekt_xlsx`), in der Oberfläche aber noch
   nicht angebunden.
-- Deployment (Render) noch nicht eingerichtet.
+- ~~Deployment (Render)~~ – erledigt, live unter https://ptn-zpk.onrender.com
+- `[hidden]`-Korrektur in den Design-System-Master übernehmen (betrifft alle Apps).
+- Auto-Erfassung nach `agp_control_kern` heben, wenn sie sich bewährt hat.

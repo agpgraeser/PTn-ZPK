@@ -178,3 +178,35 @@ table.pmat th, table.pmat td {
 }
 table.pmat th { font-weight: 600; font-family: inherit; color: var(--agp-muted, #555); }
 table.pmat td:first-child, table.pmat th:first-child { text-align: left; font-family: inherit; }
+
+/* ══ Automatisierungsgrad in der Kopfzeile ══════════════════════════════════
+   Sitzt zwischen dem Titel und „Berechnungen überprüfen“. Farbe steigt mit
+   dem Grad der Automatik, damit der Unterschied im Kurs auf einen Blick
+   erkennbar ist – ohne den Kopf bunt zu machen. */
+.modus-anzeige {
+  font-size: var(--agp-fs-xs, 12px);
+  font-weight: 600;
+  letter-spacing: .02em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, .16);
+  border: 1px solid rgba(255, 255, 255, .28);
+  color: #fff;
+}
+.modus-anzeige[data-modus="a"] { background: rgba(255, 255, 255, .10); }
+.modus-anzeige[data-modus="c"] { background: rgba(77, 208, 196, .26); border-color: rgba(77, 208, 196, .5); }
+
+/* Vom Programm gefülltes, gesperrtes Feld (Y10/Y50/Y90 im Grad b).
+   In a und c sind dieselben Felder normale Eingaben. */
+.agp-input.is-gerechnet {
+  background: var(--agp-surface-2, #f2f4f7);
+  color: var(--agp-muted, #555);
+}
+
+/* `hidden` muss stärker sein als die display-Regeln des Design-Systems:
+   `.agp-btn { display: inline-flex }` überstimmt sonst das Attribut, und ein
+   per JS ausgeblendeter Knopf bleibt sichtbar. Gilt für alle Elemente, nicht
+   nur Buttons – gleicher Fallstrick bei Karten und Meldungen.
+   Befund vom 2026-09-16; gehört mittelfristig in den Design-System-Master. */
+[hidden] { display: none !important; }
