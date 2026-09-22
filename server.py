@@ -37,11 +37,14 @@ BASE = Path(__file__).resolve().parent
 # *Environment*; lokal in start.bat). Im Kurs laesst er sich zusaetzlich per
 # URL-Parameter ?modus=a|b|c ueberschreiben - das macht das Frontend.
 MODI = ("a", "b", "c")
-MODUS_VORGABE = "b"
+# Grundwert a: Wer das Programm ohne Parameter aufruft - etwa ueber den
+# QR-Code der Startkarte -, soll bei der manuellen Stufe beginnen und sich
+# ueber ?modus=b / ?modus=c weiterarbeiten (Kursseite hdt.html staffelt das).
+MODUS_VORGABE = "a"
 
 
 def modus_lesen() -> str:
-    """Grundeinstellung aus der Umgebung; unbekannte Werte fallen auf b."""
+    """Grundeinstellung aus der Umgebung; unbekannte Werte fallen auf a."""
     wert = os.environ.get("AGP_AUTOMATIK", MODUS_VORGABE).strip().lower()
     return wert if wert in MODI else MODUS_VORGABE
 

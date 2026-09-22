@@ -190,7 +190,7 @@ def _sprungmessung(T=2.0, n=3, t0=1.0, ya=10.0, dy=5.0, ua=2.0, ue=4.0,
     return zeit, y, u
 
 
-def test_modus_grundwert_ist_b():
+def test_modus_grundwert_ist_a():
     antwort = client.get("/api/modus")
     assert antwort.status_code == 200
     assert antwort.json()["modus"] in ("a", "b", "c")
@@ -201,7 +201,7 @@ def test_modus_aus_umgebung(monkeypatch):
     monkeypatch.setenv("AGP_AUTOMATIK", "c")
     assert server.modus_lesen() == "c"
     monkeypatch.setenv("AGP_AUTOMATIK", "Unsinn")
-    assert server.modus_lesen() == "b"
+    assert server.modus_lesen() == "a"
 
 
 def test_autoerfassung_findet_die_eingaben():
