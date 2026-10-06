@@ -149,6 +149,49 @@ def test_excel_ohne_messwerte_meldet_fehler():
         excel_io.messdaten_lesen(_mappe([["nur", "Text"], ["noch", "Text"]]), "x.xlsx")
 
 
+def _mappe_mit_blaettern(blaetter: dict) -> bytes:
+    from openpyxl import Workbook
+    wb = Workbook()
+    wb.remove(wb.active)
+    for name, zeilen in blaetter.items():
+        ws = wb.create_sheet(name)
+        for z in zeilen:
+            ws.append(z)
+    puffer = io.BytesIO()
+    wb.save(puffer)
+    return puffer.getvalue()
+
+
+def test_excel_blatt_zeitverlaeufe_streckentest():
+    """Projektdatei aus RegelkreisSimulationen Seite 3: Spalten t | u | y."""
+    inhalt = _mappe_mit_blaettern({
+        "Meta": [["Feld", "Wert"], ["Formatversion", 1]],
+        "Zeitverlaeufe": [["t", "u", "y", "x1"],
+                          [0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 0.0, 0.0],
+                          [2.0, 1.0, 0.6, 0.6], [3.0, 1.0, 0.9, 0.9]],
+    })
+    e = excel_io.messdaten_lesen(inhalt, "fall.xlsx")
+    assert e["quelle"] == "Zeitverlaeufe"
+    assert e["zeit"] == [0.0, 1.0, 2.0, 3.0]
+    assert e["y_daten"] == [0.0, 0.0, 0.6, 0.9]     # y, nicht die 2. Spalte u
+    assert e["u_daten"] == [0.0, 1.0, 1.0, 1.0]
+    assert e["hinweis"] == ""
+
+
+def test_excel_blatt_zeitverlaeufe_regelkreis_nimmt_u_absolut():
+    """Ergebnisdatei eines Regelkreis-Laufs: t [s] | w | y | u_Regler | u_absolut | e."""
+    inhalt = _mappe_mit_blaettern({
+        "System": [["Systemname", "Test"]],
+        "Zeitverlaeufe": [["t [s]", "w", "y", "u_Regler", "u_absolut", "e"],
+                          [0.0, 1.0, 1.0, 0.0, 5.0, 0.0],
+                          [1.0, 2.0, 1.2, 0.8, 5.8, 0.8]],
+    })
+    e = excel_io.messdaten_lesen(inhalt, "erg.xlsx")
+    assert e["u_daten"] == [5.0, 5.8]
+    assert e["einheiten"]["zeit"] == "s"
+    assert "Regelkreis" in e["hinweis"]
+
+
 def test_excel_route():
     inhalt = _mappe([[0.0, 1.0], [1.0, 2.0]])
     r = client.post("/api/messdaten",

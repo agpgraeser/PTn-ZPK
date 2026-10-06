@@ -592,7 +592,9 @@ $('dateiInput').addEventListener('change', async (ev) => {
     $('sysName').textContent = S.mess.systemname || S.mess.dateiname || 'Messdaten geladen';
     $('dateiInfo').textContent =
       `${S.mess.dateiname} – ${S.mess.zeit.length} Messpunkte`
-      + (S.mess.u_daten.length ? ', mit Stellgröße' : ', ohne Stellgröße');
+      + (S.mess.u_daten.length ? ', mit Stellgröße' : ', ohne Stellgröße')
+      + (S.mess.quelle === 'Zeitverlaeufe' ? ' (Blatt „Zeitverlaeufe“)' : '')
+      + (S.mess.hinweis ? ' – Hinweis: ' + S.mess.hinweis : '');
     $('btnNeuErfassen').hidden = (S.modus !== 'c');
     if (S.modus === 'c') await autoErfassen();
     else auswerten();

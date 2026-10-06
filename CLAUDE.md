@@ -122,6 +122,17 @@ per JS ausgeblendeter Knopf bleibt sichtbar. Behoben mit
 `[hidden] { display: none !important; }` in `static/app.css`; gehört
 mittelfristig in den Master unter `_AGP-DesignSystem\`.
 
+## Messdaten aus Programmen der Familie (2026-10-06)
+`excel_io.messdaten_lesen` liest jetzt auch **Ergebnis- und Projektdateien**
+(z. B. RegelkreisSimulationen, Seite 3): Hat die Mappe ein Blatt
+**„Zeitverlaeufe“**, wird es statt des ersten Blatts gelesen; Spalten über
+die Kopfzeile (`t`/`t [s]`/`Zeit`, `y`, `u_absolut` vor `u`, Reihenfolge
+beliebig). Enthält das Blatt eine Spalte `w` (Regelkreis-Lauf), kommt ein
+Hinweis – PTn-ZPK braucht eine Sprungantwort der Strecke, also den
+Streckentest. Projektdatei ohne Zeitverläufe → eigene Fehlermeldung.
+Vorschau des Nutzers: später soll ein Programm aus Daten des geschlossenen
+Kreises + Reglerparametern das Streckenmodell berechnen.
+
 ## Offene Punkte
 - AGP-Projektdatei: Lesen/Schreiben ist im Server angelegt
   (`/api/projekt_parse`, `/api/projekt_xlsx`), in der Oberfläche aber noch
