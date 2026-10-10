@@ -27,6 +27,8 @@
   <span class="modus-anzeige" id="modusAnzeige" title="Vom Trainer vorgegebener Automatisierungsgrad">–</span>
   <button class="agp-btn agp-btn--ghost agp-btn--sm" onclick="pruefseiteZeigen()"
           title="Alle Zwischenergebnisse der ZPK-Rechnung nachvollziehen">Berechnungen überprüfen …</button>
+  <button class="agp-btn agp-btn--ghost agp-btn--sm" onclick="berichtZeigen()"
+          title="Druckfertige Ergebnisdokumentation mit allen Daten und Diagrammen">Ergebnisdokumentation …</button>
   <button class="agp-btn agp-btn--ghost agp-btn--sm" onclick="allesZuruecksetzen()"
           title="Alle Eingaben und geladene Messdaten zurücksetzen">↺ Zurücksetzen</button>
   <div class="agp-header__spacer"></div>
@@ -155,6 +157,19 @@
     <button class="agp-btn agp-btn--primary agp-btn--sm" onclick="pruefseiteSchliessen()">← Zurück</button>
   </div>
   <div class="pruefseite__raster" id="pruefInhalt"></div>
+</div>
+
+<!-- ══ Ergebnisdokumentation (liegt über der Arbeitsfläche, druckbar) ══ -->
+<div id="berichtseite" class="berichtseite" hidden>
+  <div class="berichtseite__kopf">
+    <h2>Ergebnisdokumentation</h2>
+    <div style="display:flex; gap:8px">
+      <button class="agp-btn agp-btn--primary agp-btn--sm" onclick="berichtDrucken()"
+              title="Druckdialog – Ziel „Als PDF speichern“ erzeugt eine PDF-Datei">🖨 Drucken / PDF</button>
+      <button class="agp-btn agp-btn--secondary agp-btn--sm" onclick="berichtSchliessen()">← Zurück</button>
+    </div>
+  </div>
+  <div id="berichtInhalt"></div>
 </div>
 
 <script>
@@ -327,26 +342,26 @@ const STIL = {
   p1:  { color: '#43a047', dash: 'dash', width: 2 },
 };
 
-function zeichnen() {
-  const div = $('plot');
+// Bausteine der Diagramme – genutzt vom Arbeitsdiagramm (zwei Teile
+// übereinander) und von der Ergebnisdokumentation (je Teil ein Bild).
+const DARST_TITEL = { 1: 'Stellgröße', 2: 'Abweichung Δy(t)', 3: 'Δy²(t)', 4: 'Σ Δy²·Δt' };
+
+function diagrammBasis() {
   const e = S.erg;
   const hatMess = !!S.mess;
   const hatModell = !!(e && e.gueltig && e.zeit_effektiv && e.zeit_effektiv.length);
-
-  // Zeitachse: die Messung hat Vorrang; ohne Messung der synthetische Vektor
   const t = hatMess ? S.mess.zeit : (hatModell ? e.zeit_effektiv : []);
-  if (t.length === 0) { Plotly.purge(div); return; }
-
   const vn = hatMess ? S.mess.var_namen : { zeit: 'Zeit', y: 'y', u: 'u' };
-  const zeigen = { m1: $('showM1').checked, opt: $('showOpt').checked, p1: $('showP1').checked };
+  return { e, hatMess, hatModell, t, vn };
+}
 
-  // — obere Kurven —
+/** Messkurve und Modellkurven (oberer Teil). */
+function spurenOben(b, zeigen, xa, ya) {
+  const { e, hatMess, hatModell, t, vn } = b;
   const traces = [];
   if (hatMess) {
-    traces.push({
-      x: t, y: S.mess.y_daten, mode: 'lines', name: 'Messwert ' + vn.y,
-      line: { width: 2, color: 'blue' }, xaxis: 'x', yaxis: 'y',
-    });
+    traces.push({ x: t, y: S.mess.y_daten, mode: 'lines', name: 'Messwert ' + vn.y,
+                  line: { width: 2, color: 'blue' }, xaxis: xa, yaxis: ya });
   }
   if (hatModell) {
     const modelle = [
@@ -356,60 +371,62 @@ function zeichnen() {
     ];
     for (const [k, daten, n, bez] of modelle) {
       if (!zeigen[k] || !daten || daten.length === 0) continue;
-      traces.push({
-        x: t, y: daten, mode: 'lines', name: `PT${n} (${bez})`,
-        line: { ...STIL[k] }, xaxis: 'x', yaxis: 'y',
-      });
+      traces.push({ x: t, y: daten, mode: 'lines', name: `PT${n} (${bez})`,
+                    line: { ...STIL[k] }, xaxis: xa, yaxis: ya });
     }
   }
+  return traces;
+}
 
-  // — unteres Diagramm: nur mit Messdaten sinnvoll —
-  let y2titel = '';
-  if (hatMess) {
-    if (S.darstellung === 1) {
-      y2titel = 'Stellgröße ' + vn.u;
-      if (S.mess.u_daten && S.mess.u_daten.length === t.length) {
-        traces.push({
-          x: t, y: S.mess.u_daten, mode: 'lines', name: 'Eingang ' + vn.u,
-          line: { width: 2, color: 'green' }, xaxis: 'x2', yaxis: 'y2',
-        });
-      }
-    } else {
-      const feld = { 2: 'diffs', 3: 'diff_qu', 4: 'kum_summe' }[S.darstellung];
-      const bez  = { 2: 'Δy', 3: 'Δy²', 4: 'Σ' }[S.darstellung];
-      y2titel    = { 2: 'Abweichung Δy(t)', 3: 'Δy²(t)', 4: 'Σ Δy²·Δt' }[S.darstellung];
-      if (hatModell) {
-        const abw = { m1: e.abw_m1, opt: e.abw_opt, p1: e.abw_p1 };
-        const nr  = { m1: e.n_opt_m1, opt: e.n_opt, p1: e.n_opt_p1 };
-        for (const k of ['m1', 'opt', 'p1']) {
-          if (!zeigen[k]) continue;
-          const d = abw[k] && abw[k][feld];
-          if (!d || d.length === 0) continue;
-          traces.push({
-            x: t, y: d, mode: 'lines', name: `${bez} PT${nr[k]}`,
-            line: { ...STIL[k] }, xaxis: 'x2', yaxis: 'y2',
-          });
-        }
-      }
+/** Unterer Teil: Stellgröße (1) oder Abweichungen der Modelle (2–4). */
+function spurenUnten(b, zeigen, darst, xa, ya) {
+  const { e, hatMess, hatModell, t, vn } = b;
+  const traces = [];
+  let titel = '';
+  if (!hatMess) return { traces, titel };
+  if (darst === 1) {
+    titel = 'Stellgröße ' + vn.u;
+    if (S.mess.u_daten && S.mess.u_daten.length === t.length) {
+      traces.push({ x: t, y: S.mess.u_daten, mode: 'lines', name: 'Eingang ' + vn.u,
+                    line: { width: 2, color: 'green' }, xaxis: xa, yaxis: ya });
+    }
+    return { traces, titel };
+  }
+  const feld = { 2: 'diffs', 3: 'diff_qu', 4: 'kum_summe' }[darst];
+  const bez  = { 2: 'Δy', 3: 'Δy²', 4: 'Σ' }[darst];
+  titel = DARST_TITEL[darst];
+  if (hatModell) {
+    const abw = { m1: e.abw_m1, opt: e.abw_opt, p1: e.abw_p1 };
+    const nr  = { m1: e.n_opt_m1, opt: e.n_opt, p1: e.n_opt_p1 };
+    for (const k of ['m1', 'opt', 'p1']) {
+      if (!zeigen[k]) continue;
+      const d = abw[k] && abw[k][feld];
+      if (!d || d.length === 0) continue;
+      traces.push({ x: t, y: d, mode: 'lines', name: `${bez} PT${nr[k]}`,
+                    line: { ...STIL[k] }, xaxis: xa, yaxis: ya });
     }
   }
+  return { traces, titel };
+}
 
-  // — Hilfslinien: jede mit eigener Gültigkeitsprüfung, denn eine einzige
-  //   NaN-Koordinate deaktiviert in Plotly den gesamten Hover-Layer —
+/** Hilfslinien YA/YE, t₀ und Ablesehilfen t10/t50/t90 (oberer Teil). Jede mit
+ *  eigener Gültigkeitsprüfung – eine NaN-Koordinate legt in Plotly den
+ *  ganzen Hover-Layer lahm. */
+function hilfslinien(b, xref, yref) {
+  const { t } = b;
   const { YA, YE } = signalwerte();
   const t0 = zahl('t0'), t10 = zahl('t10'), t50 = zahl('t50'), t90 = zahl('t90');
   const tMin = Math.min(...t), tMax = Math.max(...t);
   const shapes = [], annots = [];
-
   if (YA !== null && YE !== null) {
     for (const y of [YA, YE]) {
       shapes.push({ type: 'line', x0: tMin, x1: tMax, y0: y, y1: y,
-                    xref: 'x', yref: 'y', line: { color: 'red', width: 2, dash: 'dash' } });
+                    xref, yref, line: { color: 'red', width: 2, dash: 'dash' } });
     }
     if (t0 !== null) {
       shapes.push({ type: 'line', x0: t0, x1: t0, y0: YA, y1: YE,
-                    xref: 'x', yref: 'y', line: { color: 'orange', width: 2, dash: 'dot' } });
-      annots.push({ x: t0, y: YA, xref: 'x', yref: 'y', text: 't₀',
+                    xref, yref, line: { color: 'orange', width: 2, dash: 'dot' } });
+      annots.push({ x: t0, y: YA, xref, yref, text: 't₀',
                     showarrow: false, yshift: -18, font: { size: 12, color: 'orange' } });
     }
     const hoehen = ablesehoehen();
@@ -417,32 +434,48 @@ function zeichnen() {
       const yw = hoehen[bez];
       if (tw === null || yw === null || !isFinite(yw)) continue;
       shapes.push({ type: 'line', x0: tMin, x1: tw, y0: yw, y1: yw,
-                    xref: 'x', yref: 'y', line: { color: 'green', width: 1, dash: 'dash' } });
+                    xref, yref, line: { color: 'green', width: 1, dash: 'dash' } });
       shapes.push({ type: 'line', x0: tw, x1: tw, y0: YA, y1: yw,
-                    xref: 'x', yref: 'y', line: { color: 'green', width: 1, dash: 'dash' } });
-      annots.push({ x: tw, y: YA, xref: 'x', yref: 'y', text: bez,
+                    xref, yref, line: { color: 'green', width: 1, dash: 'dash' } });
+      annots.push({ x: tw, y: YA, xref, yref, text: bez,
                     showarrow: false, yshift: -18, font: { size: 12, color: 'blue' } });
     }
   }
+  return { shapes, annots };
+}
 
-  // — Endwerte des Integrals beschriften —
-  if (hatMess && hatModell && S.darstellung === 4) {
-    const eintraege = [
-      [e.abw_m1,  e.n_opt_m1, STIL.m1.color,  0,   zeigen.m1],
-      [e.abw_opt, e.n_opt,    STIL.opt.color, -28, zeigen.opt],
-      [e.abw_p1,  e.n_opt_p1, STIL.p1.color,  -56, zeigen.p1],
-    ];
-    const tEnde = t[t.length - 1];
-    for (const [abw, n, farbe, dy, an] of eintraege) {
-      if (!an || !abw || abw.kum_summe_gesamt === null) continue;
-      annots.push({
-        x: tEnde, y: abw.kum_summe_gesamt, xref: 'x2', yref: 'y2',
-        text: `PT${n}: ${fmt(abw.kum_summe_gesamt)}`,
-        showarrow: true, arrowhead: 2, ax: -70, ay: dy - 20,
-        font: { size: 11, color: farbe }, arrowcolor: farbe,
-      });
-    }
+/** Endwerte des Integrals Σ Δy²·Δt beschriften (Darstellung 4). */
+function integralBeschriftung(b, zeigen, xref, yref) {
+  const { e, t } = b;
+  const annots = [];
+  const eintraege = [
+    [e.abw_m1,  e.n_opt_m1, STIL.m1.color,  0,   zeigen.m1],
+    [e.abw_opt, e.n_opt,    STIL.opt.color, -28, zeigen.opt],
+    [e.abw_p1,  e.n_opt_p1, STIL.p1.color,  -56, zeigen.p1],
+  ];
+  const tEnde = t[t.length - 1];
+  for (const [abw, n, farbe, dy, an] of eintraege) {
+    if (!an || !abw || abw.kum_summe_gesamt === null) continue;
+    annots.push({ x: tEnde, y: abw.kum_summe_gesamt, xref, yref,
+                  text: `PT${n}: ${fmt(abw.kum_summe_gesamt)}`,
+                  showarrow: true, arrowhead: 2, ax: -70, ay: dy - 20,
+                  font: { size: 11, color: farbe }, arrowcolor: farbe });
   }
+  return annots;
+}
+
+function zeichnen() {
+  const div = $('plot');
+  const b = diagrammBasis();
+  const { hatMess, hatModell, t, vn } = b;
+  if (t.length === 0) { Plotly.purge(div); return; }
+
+  const zeigen = { m1: $('showM1').checked, opt: $('showOpt').checked, p1: $('showP1').checked };
+  const traces = spurenOben(b, zeigen, 'x', 'y');
+  const unten = spurenUnten(b, zeigen, S.darstellung, 'x2', 'y2');
+  traces.push(...unten.traces);
+  const { shapes, annots } = hilfslinien(b, 'x', 'y');
+  if (hatMess && hatModell && S.darstellung === 4) annots.push(...integralBeschriftung(b, zeigen, 'x2', 'y2'));
 
   const layout = hatMess ? {
     grid: { rows: 2, columns: 1, roworder: 'top to bottom',
@@ -450,7 +483,7 @@ function zeichnen() {
     xaxis:  { title: { text: vn.zeit } },
     yaxis:  { title: { text: vn.y } },
     xaxis2: { title: { text: vn.zeit } },
-    yaxis2: { title: { text: y2titel } },
+    yaxis2: { title: { text: unten.titel } },
     shapes, annotations: annots,
     margin: { t: 20, r: 20, b: 40, l: 60 },
     autosize: true, hovermode: 'closest',
@@ -472,6 +505,167 @@ function zeichnen() {
     ? (S.mess.dateiname || 'PTn – Zeitverläufe')
     : 'PTn – Modellkurven (keine Messdaten)';
 }
+
+// ══ Ergebnisdokumentation ═════════════════════════════════════════════════
+// Druckfertige Seite: alle Daten der Parameterbestimmung, oben die Regelgröße
+// mit den drei Modellen, darunter die vier Darstellungen Stellgröße … Σ Δy²·Δt.
+// Diagramme als Bilder (Plotly.toImage) – so druckt der Browser sie sicher.
+// „Drucken / PDF“ nutzt den Druckdialog des Browsers (Ziel „Als PDF speichern“).
+
+const BERICHT_BREITE = 1000;
+
+function berichtZeit() {
+  const d = new Date(), z = (n) => String(n).padStart(2, '0');
+  return { text: `${z(d.getDate())}.${z(d.getMonth() + 1)}.${d.getFullYear()} ${z(d.getHours())}:${z(d.getMinutes())}`,
+           datei: `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}_${z(d.getHours())}-${z(d.getMinutes())}` };
+}
+
+async function berichtBild(traces, layout, hoehe) {
+  return Plotly.toImage({ data: traces, layout: { ...layout, width: BERICHT_BREITE, height: hoehe,
+    paper_bgcolor: 'white', plot_bgcolor: 'white', font: { family: 'Segoe UI, Arial', size: 13 } } },
+    { format: 'png', width: BERICHT_BREITE, height: hoehe, scale: 2 });
+}
+
+function zeileTab(bez, wert, einheit = '') {
+  return `<tr><th>${esc(bez)}</th><td>${esc(wert === '' || wert === null || wert === undefined ? '–' : wert)}${einheit}</td></tr>`;
+}
+
+async function berichtZeigen() {
+  const b = diagrammBasis();
+  const { e, hatMess, hatModell, t, vn } = b;
+  const box = $('berichtInhalt');
+  $('berichtseite').hidden = false;
+  if (!hatModell) {
+    box.innerHTML = '<div class="agp-msg agp-msg--warn">Noch kein gültiges Ergebnis – bitte '
+      + 'zuerst die Parameterbestimmung abschließen (t₀ ≤ t10 ≤ t50 ≤ t90).</div>';
+    return;
+  }
+  box.innerHTML = '<div class="agp-hint">Dokumentation wird erstellt …</div>';
+
+  const g = (id) => $(id).value;
+  const { YA, YE, UA, UE, DY, DU, kS } = signalwerte();
+  const zeit = berichtZeit();
+  const alle = { m1: true, opt: true, p1: true };
+  const modelle = [
+    ['n opt − 1', e.n_opt_m1, e.T_n_opt_m1, e.var_n_opt_m1, e.abw_m1, 'm1'],
+    ['n opt',     e.n_opt,    e.T_n_opt,    e.var_n_opt,    e.abw_opt, 'opt'],
+    ['n opt + 1', e.n_opt_p1, e.T_n_opt_p1, e.var_n_opt_p1, e.abw_p1, 'p1'],
+  ];
+  const hoch = (n) => String(n).split('').map(c => '⁰¹²³⁴⁵⁶⁷⁸⁹'[+c]).join('');
+  const tf = (n, T) => (n && T) ? `G(s) = ${fmt(kS, 4)} / (${fmt(T, 3)}·s + 1)${hoch(n)}` : '–';
+
+  // ── Diagramme ──
+  const bilder = [];
+  const oben = hilfslinien(b, 'x', 'y');
+  bilder.push(['Abb. 1 – Regelgröße: Messung und Modelle PTn (n opt − 1, n opt, n opt + 1)',
+    await berichtBild(spurenOben(b, alle, 'x', 'y'), {
+      xaxis: { title: { text: vn.zeit } }, yaxis: { title: { text: vn.y } },
+      shapes: oben.shapes, annotations: oben.annots,
+      legend: { orientation: 'h', y: 1.1 }, margin: { t: 40, r: 20, b: 50, l: 70 } }, 430)]);
+  if (hatMess) {
+    for (const d of [1, 2, 3, 4]) {
+      const u = spurenUnten(b, alle, d, 'x', 'y');
+      if (!u.traces.length) {
+        bilder.push([`Abb. ${d + 1} – ${DARST_TITEL[d]}`, null]);
+        continue;
+      }
+      const ann = d === 4 ? integralBeschriftung(b, alle, 'x', 'y') : [];
+      bilder.push([`Abb. ${d + 1} – ${DARST_TITEL[d]}`,
+        await berichtBild(u.traces, {
+          xaxis: { title: { text: vn.zeit } }, yaxis: { title: { text: u.titel } },
+          annotations: ann, legend: { orientation: 'h', y: 1.15 },
+          margin: { t: 36, r: 20, b: 46, l: 70 } }, 250)]);
+    }
+  }
+
+  const quelle = hatMess
+    ? `${S.mess.dateiname || '–'} (${t.length} Messpunkte${S.mess.u_daten && S.mess.u_daten.length ? ', mit Stellgröße' : ', ohne Stellgröße'}${S.mess.quelle === 'Zeitverlaeufe' ? ', Blatt „Zeitverlaeufe“' : ''})`
+    : 'keine Messdaten – nur Modellkurven';
+  const tv = e.t_vec || [];
+
+  box.innerHTML = `
+  <article class="bericht">
+    <header class="bericht__kopf">
+      <div>
+        <div class="bericht__marke">AGP·Control · PTn-Parameter Tool</div>
+        <h1>Ergebnisdokumentation PTn-Parameterbestimmung (ZPK-Methode)</h1>
+      </div>
+      <div class="bericht__meta">${esc(zeit.text)}</div>
+    </header>
+
+    <section class="bericht__block bericht__zwei">
+      <table class="bericht__tab">
+        <caption>Grundlagen</caption>
+        ${zeileTab('Messdaten', quelle)}
+        ${zeileTab('System', (S.mess && S.mess.systemname) || '')}
+        ${zeileTab('Automatisierungsgrad', (MODUS_TEXT[S.modus] || MODUS_TEXT.b).kurz)}
+        ${zeileTab('Methode', 'Zeit-Prozent-Kennwerte t10 / t50 / t90')}
+      </table>
+      <div class="bericht__notiz">
+        <div class="bericht__notiz-titel">Bemerkung</div>
+        <div class="bericht__notiz-feld" contenteditable="true" spellcheck="true"
+             data-platzhalter="Hier vor dem Drucken eine Bemerkung eintragen (optional)."></div>
+      </div>
+    </section>
+
+    <section class="bericht__block bericht__zwei">
+      <table class="bericht__tab">
+        <caption>Signalwerte</caption>
+        ${zeileTab('YA (Ausgang vor dem Sprung)', g('YA'))}
+        ${zeileTab('YE (Ausgang im Beharrungszustand)', g('YE'))}
+        ${zeileTab('DY = YE − YA', fmt(DY, 4))}
+        ${zeileTab('UA (Stellgröße vor dem Sprung)', g('UA'))}
+        ${zeileTab('UE (Stellgröße nach dem Sprung)', g('UE'))}
+        ${zeileTab('DU = UE − UA', fmt(DU, 4))}
+        ${zeileTab('kS = DY / DU', fmt(kS, 4))}
+      </table>
+      <table class="bericht__tab">
+        <caption>Ablesung</caption>
+        ${zeileTab('t₀ (Sprungzeitpunkt)', g('t0'))}
+        ${zeileTab('Y10 → t10', `${g('Y10')} → ${g('t10')}`)}
+        ${zeileTab('Y50 → t50', `${g('Y50')} → ${g('t50')}`)}
+        ${zeileTab('Y90 → t90', `${g('Y90')} → ${g('t90')}`)}
+        ${zeileTab('t10 − t₀ / t50 − t₀ / t90 − t₀', tv.length ? tv.map(v => Number(v).toFixed(4)).join(' / ') : '')}
+        ${zeileTab('µ_mess = (t10 − t₀)/(t90 − t₀)', e.my_mess_1090 !== null && e.my_mess_1090 !== undefined ? Number(e.my_mess_1090).toFixed(5) : '')}
+      </table>
+    </section>
+
+    <section class="bericht__block">
+      <table class="bericht__tab bericht__tab--quer">
+        <caption>Ergebnis – Modelle G(s) = kS / (T·s + 1)ⁿ</caption>
+        <thead><tr><th>Modell</th><th>n</th><th>T</th><th>Var</th><th>Σ Δy²·Δt</th><th>Übertragungsfunktion</th></tr></thead>
+        <tbody>
+        ${modelle.map(([bez, n, T, V, abw, k]) => `<tr class="${k === 'opt' ? 'is-opt' : ''}">
+            <td><span class="bericht__farbe bericht__farbe--${k}"></span>${esc(bez)}</td>
+            <td>${n ?? 'n.a.'}</td><td>${fmtNA(T, 3)}</td><td>${fmtNA(V, 5)}</td>
+            <td>${abw && abw.kum_summe_gesamt !== null && abw.kum_summe_gesamt !== undefined ? fmt(abw.kum_summe_gesamt) : '–'}</td>
+            <td>${esc(tf(n, T))}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      <p class="bericht__hinweis">n opt: Ordnung, deren theoretisches Verhältnis t10/t90 dem gemessenen am
+        nächsten liegt. T = ⅓·(α10·t10 + α50·t50 + α90·t90) mit den Tabellenwerten α der Ordnung.
+        Var: Streuung der drei Einzelschätzungen – klein heißt, die drei Zeiten passen zu dieser Ordnung.
+        Σ Δy²·Δt: Summe der quadratischen Abweichung Messung − Modell über die Zeit (nur mit Messdaten).</p>
+    </section>
+
+    ${bilder.map(([titel, bild]) => `<figure class="bericht__abb">
+      ${bild ? `<img src="${bild}" alt="${esc(titel)}">` : '<div class="agp-hint">keine Daten (z. B. keine Stellgröße in der Datei)</div>'}
+      <figcaption>${esc(titel)}</figcaption></figure>`).join('')}
+    ${hatMess ? '' : '<p class="bericht__hinweis">Ohne Messdaten entfallen die Abbildungen Stellgröße bis Σ Δy²·Δt.</p>'}
+  </article>`;
+  $('berichtseite').dataset.dateiname =
+    `PTn-Ergebnis-${((S.mess && (S.mess.systemname || S.mess.dateiname)) || 'Modell').replace(/\.[^.]+$/, '').replace(/[^\wäöüÄÖÜß-]+/g, '_')}-${zeit.datei}`;
+}
+
+function berichtDrucken() {
+  // Dateiname im PDF-Dialog = Seitentitel
+  const alt = document.title;
+  document.title = $('berichtseite').dataset.dateiname || 'PTn-Ergebnis';
+  window.print();
+  setTimeout(() => { document.title = alt; }, 500);
+}
+
+function berichtSchliessen() { $('berichtseite').hidden = true; }
 
 // ══ Überprüfungsseite ═════════════════════════════════════════════════════
 // Zeigt alle Zwischengrößen der ZPK-Rechnung, damit man sie von Hand
@@ -573,6 +767,7 @@ function pruefseiteSchliessen() {
 
 document.addEventListener('keydown', (ev) => {
   if (ev.key === 'Escape' && !$('pruefseite').hidden) pruefseiteSchliessen();
+  if (ev.key === 'Escape' && !$('berichtseite').hidden) berichtSchliessen();
 });
 
 // ══ Messdaten laden ═══════════════════════════════════════════════════════

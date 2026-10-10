@@ -4,6 +4,27 @@ Lebendes Logbuch. Neueste Einträge oben.
 
 ---
 
+## 2026-10-10 – Ergebnisdokumentation
+
+Axels Wunsch: Dokumentation einer Parameterbestimmung mit allen Daten und den
+Diagrammen. Neuer Knopf **„Ergebnisdokumentation …“** im Kopf öffnet eine
+druckfertige A4-Seite (Ebene wie die Prüfseite): Grundlagen (Messdatei,
+System, Automatisierungsgrad, Methode), freies Feld „Bemerkung“ (wird nur
+gedruckt, wenn gefüllt), Signalwerte (YA, YE, DY, UA, UE, DU, kS), Ablesung
+(t₀, Y10→t10 …, t−t₀, µ_mess), Ergebnistabelle der drei Modelle (n, T, Var,
+Σ Δy²·Δt, G(s)) mit n opt hervorgehoben, kurze Erläuterung; dann **Abb. 1**
+Regelgröße mit Messung, allen drei Modellen und Ablesehilfen, darunter
+**Abb. 2–5** Stellgröße, Abweichung, Δy², Σ Δy²·Δt (immer alle drei Modelle,
+unabhängig von den Häkchen). Diagramme als PNG über `Plotly.toImage`
+(druckt zuverlässig). „🖨 Drucken / PDF“ = Druckdialog des Browsers, der
+Seitentitel liefert den Dateinamen `PTn-Ergebnis-<System>-<Datum_Uhrzeit>`.
+`zeichnen()` dafür in Bausteine zerlegt (`spurenOben`, `spurenUnten`,
+`hilfslinien`, `integralBeschriftung`) – das Arbeitsdiagramm nutzt dieselben.
+Im Browser geprüft mit einer PT4-Sprungantwort (T = 3, t₀ = 2, Rauschen):
+n opt = 4, T = 3,03; fünf Abbildungen. Tests 30 grün.
+**Offen (Axel):** auf Render von Hand deployen (Auto-Deploy ist bei ptn-zpk aus).
+
+
 ## 2026-09-16 – Automatisierungsgrad a/b/c (Trainer-Vorgabe)
 
 **Was getan**

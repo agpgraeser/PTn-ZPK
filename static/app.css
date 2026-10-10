@@ -210,3 +210,60 @@ table.pmat td:first-child, table.pmat th:first-child { text-align: left; font-fa
    nur Buttons – gleicher Fallstrick bei Karten und Meldungen.
    Befund vom 2026-09-16; gehört mittelfristig in den Design-System-Master. */
 [hidden] { display: none !important; }
+
+/* ── Ergebnisdokumentation (2026-10-10) ────────────────────────────────── */
+/* Ebene über der Arbeitsfläche wie die Prüfseite; das Blatt hat A4-Breite,
+   damit Bildschirm und Druck gleich aussehen. */
+.berichtseite {
+  position: fixed; inset: 0; z-index: 60; overflow-y: auto;
+  padding: 16px; background: var(--agp-bg, #eef0f4);
+}
+.berichtseite__kopf {
+  max-width: 210mm; margin: 0 auto 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.berichtseite__kopf h2 { margin: 0; font-size: 18px; font-weight: 700; }
+.bericht {
+  max-width: 210mm; margin: 0 auto; padding: 12mm 13mm; box-sizing: border-box;
+  background: #fff; color: #111; font-size: 11.5px; line-height: 1.4;
+  box-shadow: 0 2px 12px rgba(0,0,0,.12); border-radius: 4px;
+}
+.bericht__kopf { display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 12px; border-bottom: 2px solid #3949ab; padding-bottom: 6px; margin-bottom: 10px; }
+.bericht__marke { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #3949ab; font-weight: 700; }
+.bericht__kopf h1 { margin: 2px 0 0; font-size: 17px; }
+.bericht__meta { font-size: 11px; color: #555; white-space: nowrap; }
+.bericht__block { margin-bottom: 10px; }
+.bericht__zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+.bericht__tab { width: 100%; border-collapse: collapse; }
+.bericht__tab caption { text-align: left; font-weight: 700; font-size: 12px; color: #3949ab; padding-bottom: 3px; }
+.bericht__tab th, .bericht__tab td { border-bottom: 1px solid #e3e5ea; padding: 2px 6px 2px 0; text-align: left; vertical-align: top; }
+.bericht__tab th { font-weight: 500; color: #444; width: 55%; }
+.bericht__tab td { font-variant-numeric: tabular-nums; }
+.bericht__tab--quer th { width: auto; font-weight: 700; background: #f3f4f8; padding: 3px 6px; }
+.bericht__tab--quer td { padding: 3px 6px; }
+.bericht__tab--quer tr.is-opt td { font-weight: 700; background: #fff4f4; }
+.bericht__farbe { display: inline-block; width: 14px; height: 3px; margin-right: 6px; vertical-align: middle; }
+.bericht__farbe--m1 { background: orange; }
+.bericht__farbe--opt { background: red; }
+.bericht__farbe--p1 { background: #43a047; }
+.bericht__hinweis { font-size: 10.5px; color: #555; margin: 6px 0 0; }
+.bericht__notiz-titel { font-weight: 700; font-size: 12px; color: #3949ab; padding-bottom: 3px; }
+.bericht__notiz-feld { min-height: 64px; border: 1px dashed #c5c9d3; border-radius: 3px; padding: 4px 6px; white-space: pre-wrap; }
+.bericht__notiz-feld:empty::before { content: attr(data-platzhalter); color: #999; }
+.bericht__abb { margin: 8px 0 0; }
+.bericht__abb img { width: 100%; height: auto; display: block; }
+.bericht__abb figcaption { font-size: 10.5px; color: #444; margin-top: 2px; }
+
+@media print {
+  @page { size: A4; margin: 10mm; }
+  html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
+  body > *:not(#berichtseite) { display: none !important; }
+  .berichtseite { position: static; padding: 0; background: #fff; overflow: visible; }
+  .berichtseite__kopf { display: none; }
+  .bericht { box-shadow: none; padding: 0; max-width: none; border-radius: 0; }
+  .bericht__block, .bericht__abb { break-inside: avoid; }
+  .bericht__notiz-feld { border-color: #ddd; }
+  .bericht__notiz-feld:empty { display: none; }
+  .bericht__notiz:has(.bericht__notiz-feld:empty) { display: none; }
+}
