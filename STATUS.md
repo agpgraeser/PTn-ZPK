@@ -22,7 +22,12 @@ Seitentitel liefert den Dateinamen `PTn-Ergebnis-<System>-<Datum_Uhrzeit>`.
 `hilfslinien`, `integralBeschriftung`) – das Arbeitsdiagramm nutzt dieselben.
 Im Browser geprüft mit einer PT4-Sprungantwort (T = 3, t₀ = 2, Rauschen):
 n opt = 4, T = 3,03; fünf Abbildungen. Tests 30 grün.
-**Offen (Axel):** auf Render von Hand deployen (Auto-Deploy ist bei ptn-zpk aus).
+**Deploy erledigt** (geprueft 2026-10-18): Live ist Stand `614fd9e`, die
+Ergebnisdokumentation ist also drauf. Nachgewiesen durch Vergleich der
+ausgelieferten `index.html` mit `git show HEAD:index.html` - zeichengleich.
+Dabei aufgefallen: Der Arbeitsplatz-Rechner war einen Commit hinterher
+(`614fd9e` "Plotly lokal ausliefern statt von cdn.plot.ly" kam vom Laptop) -
+nach einem Rechnerwechsel zuerst `git pull`.
 
 
 ## 2026-09-16 – Automatisierungsgrad a/b/c (Trainer-Vorgabe)
