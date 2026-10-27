@@ -18,9 +18,8 @@ from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from agp_control_kern import projektdatei, ptn_zpk
+from agp_control_kern import autoerfassung, projektdatei, ptn_zpk
 
-import autoerfassung
 import excel_io
 from webauth import schutz_aktivieren
 

@@ -80,19 +80,20 @@ und „Berechnungen überprüfen".
 | **b** | Teilautomatisch | von Hand | berechnet, gesperrt | von Hand |
 | **c** | Vollautomatisch | abgelesen | abgelesen | abgelesen |
 
-Grad **b** ist der Stand vor dieser Erweiterung und bleibt die Vorgabe.
+Grad **b** ist der Stand vor dieser Erweiterung. Vorgabe ist seit dem
+QR-Code-Einstieg **a** (`MODUS_VORGABE` in `server.py`).
 In **c** sind alle Werte änderbar – die Erfassung ist ein Vorschlag.
 
 **Einstellung:** Grundwert über die Umgebungsvariable `AGP_AUTOMATIK=a|b|c`
 (Render: je Dienst unter *Environment*; lokal in `start.bat`), zur Laufzeit
 überschreibbar per URL-Parameter `?modus=a|b|c`. Unbekannte Werte fallen auf
-`b` zurück. Der URL-Parameter ist Absicht (Steigerung a → b → c im Kurs), er
+`a` zurück. Der URL-Parameter ist Absicht (Steigerung a → b → c im Kurs), er
 ist **keine Sperre** – ein Teilnehmer kann ihn selbst setzen.
 
 **Wo:** `modus_lesen()` und `/api/modus` in `server.py`, `modusAnwenden()` in
 `index.html`, Badge `.modus-anzeige` in `static/app.css`.
 
-### Auto-Erfassung (`autoerfassung.py`)
+### Auto-Erfassung (`agp_control_kern.autoerfassung`, bis 2026-10-27 app-lokal)
 Liegt bewusst **in dieser App**, nicht im Kern – sie hängt am Messdatenformat
 (`excel_io.py` liegt aus demselben Grund lokal). Verfahren:
 - YA/YE als **Median** eines 5-%-Randbereichs (robust gegen Rauschen)

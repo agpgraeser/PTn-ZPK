@@ -178,7 +178,7 @@ const S = {
   mess: null,          // {zeit, y_daten, u_daten, var_namen, dateiname, systemname}
   erg: null,           // Antwort von /api/auswertung
   darstellung: 1,
-  modus: 'b',          // Automatisierungsgrad a|b|c (siehe modusAnwenden)
+  modus: 'a',          // Automatisierungsgrad a|b|c (siehe modusAnwenden)
 };
 
 // ══ Automatisierungsgrad ══════════════════════════════════════════════════
@@ -194,7 +194,7 @@ const MODUS_TEXT = {
 const Y_FELDER = ['Y10', 'Y50', 'Y90'];
 
 function modusAnwenden() {
-  const t = MODUS_TEXT[S.modus] || MODUS_TEXT.b;
+  const t = MODUS_TEXT[S.modus] || MODUS_TEXT.a;
   const a = $('modusAnzeige');
   a.textContent = t.kurz;
   a.title = t.lang;
@@ -598,7 +598,7 @@ async function berichtZeigen() {
         <caption>Grundlagen</caption>
         ${zeileTab('Messdaten', quelle)}
         ${zeileTab('System', (S.mess && S.mess.systemname) || '')}
-        ${zeileTab('Automatisierungsgrad', (MODUS_TEXT[S.modus] || MODUS_TEXT.b).kurz)}
+        ${zeileTab('Automatisierungsgrad', (MODUS_TEXT[S.modus] || MODUS_TEXT.a).kurz)}
         ${zeileTab('Methode', 'Zeit-Prozent-Kennwerte t10 / t50 / t90')}
       </table>
       <div class="bericht__notiz">
@@ -894,8 +894,8 @@ function allesZuruecksetzen() {
   // Automatisierungsgrad: Grundwert vom Server, ?modus=… hat Vorrang.
   try {
     const r = await fetch('/api/modus');
-    if (r.ok) S.modus = (await r.json()).modus || 'b';
-  } catch { /* Server offline: Grundwert b */ }
+    if (r.ok) S.modus = (await r.json()).modus || 'a';
+  } catch { /* Server offline: Grundwert a */ }
   const ausUrl = (new URLSearchParams(location.search).get('modus') || '').toLowerCase();
   if (['a', 'b', 'c'].includes(ausUrl)) S.modus = ausUrl;
   modusAnwenden();
