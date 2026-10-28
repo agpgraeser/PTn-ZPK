@@ -87,6 +87,15 @@ class AutoerfassungRequest(BaseModel):
     u_daten: list[float] | None = None
 
 
+class AblesenRequest(BaseModel):
+    """Neu ablesen nach korrigierten Signalwerten (Grad c)."""
+    zeit: list[float]
+    y_daten: list[float]
+    ya: float
+    ye: float
+    t0: float | None = None
+
+
 class ProjektSpeichernRequest(BaseModel):
     """Speichert das ermittelte Modell in eine AGP-Projektdatei.
     `projekt` = zuvor geladenes Projekt-dict; None = neue Datei anlegen."""
@@ -136,6 +145,16 @@ def autoerfassen(req: AutoerfassungRequest):
     """Liest YA/YE/UA/UE, t0, die Ablesehoehen und t10/t50/t90 aus der Messung."""
     try:
         return autoerfassung.erfassen(req.zeit, req.y_daten, req.u_daten)
+    except autoerfassung.ErfassungError as ex:
+        raise HTTPException(status_code=400, detail=str(ex))
+
+
+@app.post("/api/ablesen")
+def ablesen(req: AblesenRequest):
+    """Y10/Y50/Y90 aus YA/YE und die Zeiten, zu denen die Messung sie
+    erreicht – fuer Grad c, wenn der Nutzer YA, YE oder t0 korrigiert."""
+    try:
+        return autoerfassung.ablesen(req.zeit, req.y_daten, req.ya, req.ye, req.t0)
     except autoerfassung.ErfassungError as ex:
         raise HTTPException(status_code=400, detail=str(ex))
 

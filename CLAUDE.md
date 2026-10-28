@@ -83,6 +83,9 @@ und „Berechnungen überprüfen".
 Grad **b** ist der Stand vor dieser Erweiterung. Vorgabe ist seit dem
 QR-Code-Einstieg **a** (`MODUS_VORGABE` in `server.py`).
 In **c** sind alle Werte änderbar – die Erfassung ist ein Vorschlag.
+Korrigiert man in c YA, YE oder t₀, liest die App Y10/Y50/Y90 und t10/t50/t90
+automatisch neu ab (`/api/ablesen` → `agp_control_kern.autoerfassung.ablesen`,
+400 ms nach der letzten Eingabe, seit 2026-10-28).
 
 **Einstellung:** Grundwert über die Umgebungsvariable `AGP_AUTOMATIK=a|b|c`
 (Render: je Dienst unter *Environment*; lokal in `start.bat`), zur Laufzeit

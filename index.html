@@ -849,9 +849,50 @@ async function autoErfassen() {
   auswerten();
 }
 
+/** Grad c: nach korrigierten Signalwerten Y- und t-Werte neu ablesen. */
+async function neuAblesen() {
+  const roh = (id) => $(id).value.trim();
+  if (roh('YA') === '' || roh('YE') === '') return;
+  const h = $('erfassungHinweis');
+  try {
+    const r = await fetch('/api/ablesen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ zeit: S.mess.zeit, y_daten: S.mess.y_daten,
+                             ya: Number(roh('YA')), ye: Number(roh('YE')),
+                             t0: roh('t0') === '' ? null : Number(roh('t0')) }),
+    });
+    const antwort = await r.json();
+    if (!r.ok) throw new Error(antwort.detail || 'Ablesen fehlgeschlagen');
+    const felder = { Y10: antwort.y10, Y50: antwort.y50, Y90: antwort.y90,
+                     t10: antwort.t10, t50: antwort.t50, t90: antwort.t90 };
+    for (const [id, wert] of Object.entries(felder)) {
+      $(id).value = (wert === null || wert === undefined) ? '' : fmt(wert, 4);
+    }
+    h.textContent = 'Signalwerte geändert – Y10/Y50/Y90 und t10/t50/t90 neu abgelesen.'
+      + (antwort.hinweise.length ? ' ' + antwort.hinweise.join(' ') : '');
+    h.hidden = false;
+  } catch (e) {
+    h.textContent = 'Neu ablesen nicht möglich: ' + e.message;
+    h.hidden = false;
+  }
+  auswerten();
+}
+
 // ══ Bedienung ═════════════════════════════════════════════════════════════
 for (const id of ['YA', 'YE', 'UA', 'UE', 't0', 't10', 't50', 't90', ...Y_FELDER]) {
   $(id).addEventListener('input', auswertenVerzoegert);
+}
+// Grad c: Korrigiert der Nutzer YA, YE oder t₀, liest die App Y10/Y50/Y90
+// und t10/t50/t90 bei den neuen Höhen neu aus der Messung ab (28.10.2026,
+// wie PT1TT-3Punkt). UA/UE ändern nur kS – das rechnet auswerten() ohnehin.
+let ablesTimer = null;
+for (const id of ['YA', 'YE', 't0']) {
+  $(id).addEventListener('input', () => {
+    if (S.modus !== 'c' || !S.mess) return;
+    clearTimeout(ablesTimer);
+    ablesTimer = setTimeout(neuAblesen, 400);
+  });
 }
 for (const id of ['showM1', 'showOpt', 'showP1']) {
   $(id).addEventListener('change', zeichnen);

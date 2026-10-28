@@ -349,3 +349,15 @@ def test_autoerfassung_meldet_zu_wenige_punkte():
                           json={"zeit": [0.0, 1.0], "y_daten": [0.0, 1.0]})
     assert antwort.status_code == 400
     assert "Messpunkte" in antwort.json()["detail"]
+
+
+def test_ablesen_nach_korrigiertem_endwert():
+    """Grad c: YE korrigiert → neue Ablesehoehen, Zeiten neu aus der Messung."""
+    zeit, y, _ = _sprungmessung(t0=1.0, ya=10.0, dy=5.0)
+    a = client.post("/api/ablesen", json={"zeit": zeit, "y_daten": y,
+                                          "ya": 10.0, "ye": 15.0, "t0": 1.0}).json()
+    b = client.post("/api/ablesen", json={"zeit": zeit, "y_daten": y,
+                                          "ya": 10.0, "ye": 14.0, "t0": 1.0}).json()
+    assert a["y50"] == pytest.approx(12.5) and b["y50"] == pytest.approx(12.0)
+    assert b["t50"] < a["t50"]
+    assert a["hinweise"] == []
